@@ -1,7 +1,6 @@
 library (tidyverse)
 library (here)
 
-
 bus_trips <- read.csv (here("data", "bus_data.csv"))
 train_trips <- read.csv (here("data", "train_data.csv"))
 weather <- read.csv(here("data", "weather.csv"))
@@ -54,8 +53,7 @@ public_transport %>%
 
 # PLOT 2
 
-
-# Variation in demand by day
+# Variation in usage by day of week
 # 3*52.19 == Number of weeks in 3 years
 public_transport %>%
   group_by(dayofweek, trip_identity) %>%
@@ -77,69 +75,42 @@ public_transport %>%
   coord_flip()
 
 
-
-
 # PLOT 3
 
+# Most common bus routes and train stations
+# Dividing by 3*365 to get daily average
+top10_bus <- bus_trips %>%
+  group_by(route) %>%
+  summarise(count = sum(rides)/(3*365)) %>%
+  top_n(10)
+
+top10_train <- train_trips %>%
+  group_by(stationname) %>%
+  summarise(count = sum(rides)/(3*365)) %>%
+  top_n(10)
+
+library(ggrepel)
+
+ggplot() +
+  geom_label_repel(data = top10_train, aes(x = "Train Stations", y = count, label = stationname),
+            check_overlap = FALSE, size = 4, angle = 0, colour = "black")  +
+  geom_label_repel(data = top10_bus, aes(x = "Bus Routes", y = count, label = route),
+            check_overlap = FALSE, size = 4, angle = 0, colour = "black")  +
+  scale_y_continuous(labels = scales::comma) + 
+  labs(title ="Top 10 Bus Routes & Train Stations in Chicago", 
+       subtitle = "Busiest train stations are in downtown, buses common on non-L routes.",
+       x = "", y = "Average Daily Passengers",
+       caption = "CTA Ridership Data 2015-2017") +
+  theme_bw() + 
+  theme(plot.title = element_text(hjust = -0, size = 11, face = "bold"), 
+        plot.subtitle = element_text(size = 9, face = "bold"))
 
 
-ggplot(x) +
-  geom_ribbon(aes(x = dayofweek, ymin = count - 1, ymax = count + 1), fill = "grey70") +
-  geom_line(aes(x = dayofweek, y = count))
+################ 
+################
+################
 
-ggplot(x, aes(x=dayofweek, y=count)) + 
-  geom_point(size=3) + 
-  geom_segment(aes(x=dayofweek, 
-                   xend=dayofweek, 
-                   y=0, 
-                   yend=count,
-                   colour = trip_identity,
-                   position = 'dodge',
-                   linetype=trip_identity)) + 
-  labs(title="Lollipop Chart", 
-       subtitle="Make Vs Avg. Mileage", 
-       caption="source: mpg") 
-
-install.packages('ggthemes')
-library(ggthemes)
-
-ggplot(x, aes(dayofweek, count)) + 
-  geom_tufteboxplot() + 
-  theme(axis.text.x = element_text(angle=65, vjust=0.6)) + 
-  labs(title="Tufte Styled Boxplot", 
-       subtitle="City Mileage grouped by Class of vehicle",
-       caption="Source: mpg",
-       x="Class of Vehicle",
-       y="City Mileage")
-
-ggplot(x, aes(x=dayofweek)) + 
-  geom_line(aes(y=count, col=trip_identity)) + 
-ggplot(x, aes(x=dayofweek)) + 
-  geom_area(aes(y=count, fill="psavert")) + 
-  geom_area(aes(y=uempmed, fill="uempmed"))
-
-
-geom_freqpoly()
-x, y, alpha, color, linetype, size
-b + geom_freqpoly(aes(y = ..density..)) 
-
-x <- public_transport %>%
-  group_by(dayofweek, trip_identity) %>%
-  summarise(count = sum(rides)) 
-
-ggplot(data = x) +
-  geom_text(aes(x = dayofweek, y = count, label = trip_identity))
-
-
-ggplot(x, aes(x=dayofweek, y=count, group=2)) +
-  geom_point(stat='summary', fun.y=sum) +
-  stat_summary(fun.y=sum, geom="line")
-
-
-ggplot(x, aes(dayofweek, count)) +
-  geom_line(aes(linetype = trip_identity))
-
-
+# PLOT 4: DIAGRAM FOR LATER
 # Average passengers over a three year period (2015 - 2018)
 # Divide by 3 to get average yearly data 
 public_transport %>%
@@ -148,7 +119,7 @@ public_transport %>%
   ggplot() + 
   geom_line(mapping = aes(x = month, y=count/3)) +
   geom_point(mapping = aes(x = month, y=count/3), position = "dodge",
-           stat = "identity" , colour="black", size=.6)  +
+             stat = "identity" , colour="black", size=.6)  +
   scale_y_continuous(labels = scales::comma) +
   coord_cartesian( ylim = c(10000000, 25000000)) + 
   labs(title =" Difference between Bus & Train usage", 
@@ -157,44 +128,17 @@ public_transport %>%
   coord_flip() 
 
 
-
-
-
-
-
-
-
-
-
-ggplot(data = public_transport) + 
-  geom_bar(mapping = aes(x = month, fill = dayofweek), position = "dodge")   +
-  coord_cartesian(ylim = c(2500, 4000)) 
-
-
-
-
-
+# PLOT 5: DIAGRAM FOR LATER
 # Difference in demand
 x <- public_transport %>%
   group_by(month, trip_identity) %>%
   summarise (count = sum(rides)) %>%
   mutate (Diff = count - lag(count)) 
 
-ggplot(data = x, aes (x = month, y = count)) +
+ggplot(x, aes (x = month, y = count)) +
   geom_jitter() 
 
-%>%
-  ggplot(aes(x=month, y=abs(Diff) )) + 
+ggplot(x, aes(x=month, y=abs(Diff) )) + 
   geom_point() + geom_smooth() +
   scale_y_continuous(labels = scales::comma) 
 
-
-
-detach("package:lubridate", unload=TRUE)
-
-
-# IDEAS
-# Top bus routes
-# top train stations
-# days when highest bus and train usage
-  
