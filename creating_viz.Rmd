@@ -1,0 +1,296 @@
+---
+title: "graph_exploration"
+author: "Amir Kazi"
+date: "1/27/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+```
+
+
+```{r setup, include=FALSE}
+library (tidyverse)
+library (here)
+# lubridate masks object 'here' from package 'here'.
+library(lubridate)
+```
+
+```{r}
+# READING DATA
+
+bus_trips <- read.csv (here::here("data", "bus_data.csv"))
+train_trips <- read.csv (here::here("data", "train_data.csv"))
+weather_descriptions <- read.csv(here::here("data", "weather.csv"))
+weather <- read.csv(here::here("data", "midway_weather.csv")) 
+  
+  
+```
+
+```{r}
+
+train_trips$date <- ymd(train_trips$date)
+train_trips$dayofweek <- wday(train_trips$date, label=TRUE)  
+train_trips$day <- day(train_trips$date)
+train_trips$month <- month(train_trips$date, label = TRUE)
+train_trips$year <- year(train_trips$date)
+
+bus_trips$date <- ymd(bus_trips$date)
+bus_trips$dayofweek <- wday(bus_trips$date, label=TRUE)  
+bus_trips$day <- day(bus_trips$date)
+bus_trips$month <- month(bus_trips$date, label = TRUE)
+bus_trips$year <- year(bus_trips$date)
+
+train_trips$trip_identity = 'train'
+bus_trips$trip_identity = 'bus'
+
+train_trips$route = NA
+bus_trips$station_id = NA
+bus_trips$stationname = NA
+
+public_transport = rbind(train_trips,bus_trips)
+public_transport = filter (public_transport, year(date) != 2018 )
+
+public_transport$dayofweek <- factor(public_transport$dayofweek, levels = c("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"))
+
+weather$date <- ymd(weather$DATE)
+weather$dayofweek <- wday(weather$DATE, label=TRUE)  
+weather$day <- day(weather$DATE)
+weather$month <- month(weather$DATE, label = TRUE)
+weather$year <- year(weather$DATE)
+weather$dayofyear <- yday(weather$DATE)
+
+```
+
+
+```{r}
+# PLOT 1
+
+# Average passengers over a three year period (2015 - 2017)
+# Divide by 3 to get average yearly data 
+public_transport %>%
+  group_by(month, trip_identity) %>%
+  summarise (count = sum(rides)) %>%
+  ggplot(mapping = aes(x = month, y=(count/3)/1000000, colour = trip_identity)) + 
+  geom_point() +
+  geom_line(mapping = aes( group = trip_identity)) +
+  theme(legend.title = element_blank()) + 
+  scale_y_continuous(labels = scales::comma) +
+  coord_cartesian( ylim = c(13, 25)) + 
+  labs(title ="Monthly Usage of Public Transport in Chicago Declines in Winter", 
+       subtitle = "Both buses & trains experience fall in usage",
+       x = "Month", y = "Total Number of Passengers (Millions)",
+       caption = "CTA Ridership Data 2015-2017") +
+  theme_bw() +
+  theme(plot.title = element_text(hjust = 0, size = 12, face = "bold"), 
+        plot.subtitle = element_text(size = 10, face = "bold"),
+        legend.title=element_blank())
+
+
+```
+
+```{r}
+# PLOT 2
+
+# Variation in usage by day of week
+# 3*52.19 == Number of weeks in 3 years
+
+
+public_transport %>%
+  group_by(dayofweek, trip_identity) %>%
+  summarise(count = (sum(rides)/(3*52.19))/1000)  %>%
+  ggplot(aes(x=dayofweek, y=count))  +
+  geom_point(aes(col=trip_identity), size = 5, stroke = 1) + 
+  geom_line(mapping = aes(x = dayofweek, y=count),  alpha = 0.3)  +
+  scale_y_continuous(labels = scales::comma) +
+  coord_cartesian( ylim = c(200, 900)) + 
+  labs(title ="Usage of Public Transport in Chicago is Highest on Weekdays", 
+       subtitle = "Weekends see a significant drop in riders",
+       x = "Day of Week", y = "Average Weekly Passengers (Thousands)",
+       caption = "CTA Ridership Data 2015-2017") +
+  theme_bw()  + 
+  theme(plot.title = element_text(hjust = -0, size = 12, face = "bold"), 
+        plot.subtitle = element_text(size = 10, face = "bold"), 
+        legend.title=element_blank(),
+        legend.key = element_rect(fill = "white")) +
+  coord_flip()
+
+```
+
+
+
+```{r}
+
+
+weather %>%
+  group_by(month) %>%
+  summarize(avg_prcp = mean(PRCP, na.rm = TRUE), avg_snow = mean(SNOW, na.rm = TRUE)) %>%
+  ggplot() +
+  geom_line(aes(x = month, y = avg_prcp, group = 1), colour = "cyan4") +
+  geom_point(aes(x = month, y = avg_prcp), colour = "dark blue") +
+  geom_line(aes(x = month, y = avg_snow, group = 1), colour = "indianred1") +
+  geom_point(aes(x = month, y = avg_snow), colour = "dark red")  +
+  theme_bw() + 
+  annotate(geom="text", x=3.3, y=7, label="SNOW", color="indianred3") +
+  annotate(geom="text", x=7, y=4.7, label="PRECIPITATION", color="cyan4") +
+  labs(title ="Larger Seasonal Variation in Snow than in Precipitation in Chicago", 
+       subtitle = "Precipitation Slightly Higher During Summer ",
+       x = "Month", 
+       y = "Average Per Month (Inches)",
+       caption = "National Centers for Environmental Information 2015-2017") +
+  theme(plot.title = element_text(hjust = -0, size = 12, face = "bold"), 
+        plot.subtitle = element_text(size = 10, face = "bold"))
+  
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+```{r}
+library (pacman)
+p_load(gridExtra,grid)
+
+
+g.top <- ggplot(weather, aes(x = date, y = PRCP, ymin=0, ymax=PRCP)) +
+  geom_linerange() +
+  scale_y_continuous(limits=c(22,0),expand=c(0,0), trans="reverse")+
+  theme_classic() +
+  theme(plot.margin = unit(c(5,5,-32,6),units="points"),
+        axis.title.y = element_text(vjust = 0.3))+
+  labs(y = "Rain (mm)")
+
+
+g.bottom <- ggplot(train_trips, aes(x = date, y = rides)) +
+  geom_line() +
+  theme_classic() +
+  theme(plot.margin = unit(c(0,5,1,1),units="points")) +
+  labs(x = "Date", y = "River flow (m/s)")
+
+
+grid.arrange(g.top,g.bottom, heights = c(1/5, 4/5))
+
+```
+
+
+
+
+
+
+
+
+
+```{r}
+
+weather %>%
+  group_by(month) %>%
+  ggplot() + 
+  geom_violin(aes(x = month, y = TMIN), ) +
+  geom_violin(aes(x = month, y = TMAX))
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+```{r}
+
+install.packages(scales)
+
+library(scales)
+
+
+df$Month <- as.Date(df$Month)
+
+
+ggplot(weather, aes(x = as.Date(DATE), y = PRCP)) + 
+  #geom_bar(stat = "identity") 
+  geom_line()
+
++
+  theme_bw() +
+  labs(x = "Month", y = "Average Visits per User") 
+
+
++
+  scale_x_date(labels = date_format("%m-%Y"))
+```
+
+
+
+
+```{r}
+
+ggplot(public_transport, aes(x = as.Date(date), y = rides)) + 
+  geom_bar(stat = "identity") 
+
+
+```
+
+
+
+
+
+
+
+
+
+```{r}
+library (pacman)
+p_load ("rgdal", "maptools", "plyr")
+install.packages("ggmap")
+library(rgdal)     # R wrapper around GDAL/OGR
+library(ggplot2)   # for general plotting
+library(ggmap)    # for fortifying shapefiles
+
+# First read in the shapefile, using the path to the shapefile and the shapefile name minus the
+# extension as arguments
+shapefile <- readOGR(dsn=path.expand("~/Desktop/transportation-demand-chicago//ChiComArea.shp"))
+
+# Next the shapefile has to be converted to a dataframe for use in ggplot2
+shapefile_df <- fortify(shapefile)
+
+# Now the shapefile can be plotted as either a geom_path or a geom_polygon.
+# Paths handle clipping better. Polygons can be filled.
+# You need the aesthetics long, lat, and group.
+map <- ggplot() +
+geom_path(data = shapefile_df, 
+          aes(x = long, y = lat, group = group),
+          color = 'gray', fill = 'white', size = .2)
+
+print(map) 
+
+# Using the ggplot2 function coord_map will make things look better and it will also let you change
+# the projection. But sometimes with large shapefiles it makes everything blow up.
+map_projected <- map +
+  coord_map()
+  
+print(map_projected)
+
+```

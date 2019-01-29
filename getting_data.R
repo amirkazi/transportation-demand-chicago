@@ -3,6 +3,7 @@ library("devtools")
 library(here)
 library (tidyverse)
 #devtools::install_github("Chicago/RSocrata")
+library(RSocrata)
 
 # Data between 1st January 2015 and 1st January 2018
 # API docs: https://dev.socrata.com/docs/datatypes/floating_timestamp.html
@@ -20,3 +21,8 @@ write.csv (select (weather, datetime, Chicago), here("data", "weather.csv"))
 
 # TAXI
 #taxi_trips <- read.socrata("https://data.cityofchicago.org/resource/wrvz-psew.json?$where=trip_start_timestamp between '2015-01-01T00:00:00' and '2018-01-01T00:00:00'")
+#write.csv(taxi_trips, 'taxi_data.csv')
+
+
+#taxi_trips <- read.socrata("https://data.cityofchicago.org/resource/wrvz-psew.json?$where=trip_start_timestamp between '2015-01-01T00:00:00' and '2015-01-13T00:00:00'")
+#write.csv(taxi_trips, 'taxi_data.csv')
