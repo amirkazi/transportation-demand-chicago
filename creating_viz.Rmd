@@ -13,6 +13,7 @@ library (tidyverse)
 library (here)
 library(lubridate)  # lubridate masks object 'here' from package 'here'.
 library(scales)
+library(ggrepel)
 ```
 
 
@@ -97,9 +98,59 @@ public_transport %>%
           legend.title=element_blank(),,
           legend.spacing.x = unit(0.2, 'cm'))  + scale_x_date(date_labels = "%d %b %Y", 
                                                               date_breaks = "1 year", 
-                                                              date_minor_breaks = "1 month") +
-    scale_y_continuous(labels = scales::comma) 
+                                                              date_minor_breaks = "1 month")+
+    scale_y_continuous(labels = scales::comma) +
+  geom_vline(xintercept = as.Date(c("2015-01-01", "2016-01-01", "2017-01-01", "2018-01-01"))
+             , linetype = 3) 
  
+```
+
+
+
+```{r, warning=FALSE, message=FALSE}
+# reference: https://ibecav.github.io/slopegraph/
+
+p <- public_transport %>%
+  group_by(year, month, trip_identity) %>%
+  summarise(riders = sum(rides)) %>%
+  filter (trip_identity == "bus") 
+
+  ggplot(p, aes(x = year, y = riders, group = month)) +
+  geom_line(aes(color = month), alpha = 0.3, size = 2) +
+  geom_point(aes(color = month, alpha = 1), size = 3) +
+  geom_text_repel(data = p %>% filter(year == "2015"),
+                  aes(label = paste0(month)) , 
+                  hjust = "left", 
+                  fontface = 7, 
+                  size = 4, 
+                  nudge_x = -.45, 
+                  direction = "y") +
+  geom_text_repel(data = p %>% filter(year == "2017"),
+              aes(label = paste0(month)) , 
+              hjust = "right", 
+              fontface = 7, 
+              size = 4, 
+              nudge_x = .5, 
+              direction = "y") +
+  scale_x_discrete(position = "bottom") +
+  theme_bw() +
+  theme(legend.position = "none") + 
+    annotate("text", x = 2015, y = 25500000, label = "2015", family = "Courier")  + 
+    annotate("text", x = 2016, y = 25500000, label = "2016", family = "Courier") +  
+    annotate("text", x = 2017, y = 25500000, label = "2017", family = "Courier") +
+  theme(panel.border     = element_blank()) +
+  theme(axis.title.x     = element_blank()) +
+  theme(axis.text.y     = element_blank()) +
+  theme(panel.grid.major.x = element_blank()) +
+  theme(axis.ticks       = element_blank()) +
+  labs(
+    title = "Overall Bus Usage Has Declined Between 2015 and 2017",
+    subtitle = "Summer Months still experience more bus usage than in Winter",
+    caption = "CTA Transit Data 2015 - 2017",
+    y = "Total Bus Riders") +
+  theme(plot.title = element_text(hjust = 0.58, size = 12, face = "bold"), 
+        plot.subtitle = element_text(hjust = 0.515, size = 10, face = "bold")) + scale_y_continuous(labels = scales::comma)
+
 ```
 
 
@@ -148,9 +199,7 @@ weather %>%
   summarize(avg_prcp = mean(PRCP, na.rm = TRUE), avg_snow = mean(SNOW, na.rm = TRUE)) %>%
   ggplot() +
   geom_step(aes(x = month, y = avg_prcp, group = 1), linetype = 14, colour = "cyan4") +
-  #geom_point(aes(x = month, y = avg_prcp), colour = "dark blue") +
   geom_step(aes(x = month, y = avg_snow, group = 1), linetype = 11, colour = "indianred1") +
-  #geom_point(aes(x = month, y = avg_snow), colour = "dark red")  +
   theme_bw() + 
   annotate(geom="text", x=3.55, y=7, label="SNOW", color="indianred3", fontface =4) +
   annotate(geom="text", x=7, y=4.9, label="PRECIPITATION", color="cyan4", fontface =4) +
@@ -226,52 +275,6 @@ ggplot(snow_comparison) +
 
 
 ```
-
-
-
-
-
-
-
-```{r}
-# Tile Graph of Precipitation Levels VS Riders
-
-
-total_riders_per_day <-
-  public_transport %>%
-  group_by (date) %>%
-  summarize(riders = sum(rides))
-
-
-x<- merge(total_riders_per_day, weather, by = "date")
-
-x %>%
-  ggplot() +
-  geom_contour(aes(x = PRCP, y = SNOW, z = riders))
-
-
-```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

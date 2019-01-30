@@ -217,3 +217,12 @@ print(map_projected)
 
 ```
 
+
+# ANOTHER DIAGRAM for later
+public_transport %>%
+  group_by(year, month, trip_identity) %>%
+  summarise(riders = sum(rides)) %>%
+  ggplot() +
+  coord_polar (theta = 'x') +
+  geom_path(aes(x = month, y = riders, group=year, alpha = year)) +
+  facet_grid(. ~ trip_identity)
