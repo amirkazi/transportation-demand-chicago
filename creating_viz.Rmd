@@ -14,6 +14,7 @@ library (tidyverse)
 library (here)
 # lubridate masks object 'here' from package 'here'.
 library(lubridate)
+library(scales)
 ```
 
 ```{r}
@@ -284,17 +285,6 @@ grid.arrange(g.top,g.bottom, heights = c(1/5, 4/5))
 
 
 
-```{r}
-
-weather %>%
-  group_by(month) %>%
-  ggplot() + 
-  geom_violin(aes(x = month, y = TMIN), ) +
-  geom_violin(aes(x = month, y = TMAX))
-
-```
-
-
 
 
 
@@ -336,9 +326,32 @@ ggplot(weather, aes(x = as.Date(DATE), y = PRCP)) +
 
 ```{r}
 
-ggplot(public_transport, aes(x = as.Date(date), y = rides)) + 
-  geom_bar(stat = "identity") 
+# Shading Winters over 3 months of Data
+# Reference: https://stackoverflow.com/questions/18419628/creating-custom-legends-in-ggplot2
 
+
+df<-data.frame(xmin=as.Date(c('2015-01-01','2015-12-21','2016-12-21', '2017-12-21' )),
+               xmax=as.Date(c('2015-03-20','2016-03-30', '2017-03-30', '2017-12-31' )),
+               ymin=c(-Inf,-Inf),
+               ymax=c(Inf,Inf),
+               winters=c("Winters"))
+
+ggplot(public_transport, aes(x = date, y = rides)) +
+  geom_smooth(aes(color = trip_identity)) +
+  geom_rect(data=df,aes(xmin=xmin,ymin=ymin,xmax=xmax,ymax=ymax,fill=winters),
+                    alpha=0.4,inherit.aes=FALSE)+
+  scale_fill_manual(values=c("#CCFFFF")) + 
+  labs(title ="Monthly Usage of Public Transport in Chicago Declines in Winter", 
+       subtitle = "Train usage is more elastic to seasonal changes.",
+       x = "", y = "Total Number of Passengers Per Day (Millions)",
+       caption = "CTA Ridership Data 2015-2017") +
+  theme_bw() +
+  theme(plot.title = element_text(hjust = 0, size = 12, face = "bold"), 
+        plot.subtitle = element_text(size = 10, face = "bold"),
+        legend.title=element_blank(),,
+        legend.spacing.x = unit(0.2, 'cm'))  + scale_x_date(date_labels = "%d %b %Y", 
+                                                            date_breaks = "1 year", 
+                                                            date_minor_breaks = "1 month")
 
 ```
 
