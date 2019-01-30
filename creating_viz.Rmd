@@ -5,17 +5,14 @@ date: "1/27/2019"
 output: html_document
 ---
 
-```{r setup, include=FALSE}
-```
-
 
 ```{r setup, include=FALSE}
 library (tidyverse)
 library (here)
-# lubridate masks object 'here' from package 'here'.
-library(lubridate)
+library(lubridate)  # lubridate masks object 'here' from package 'here'.
 library(scales)
 ```
+
 
 ```{r}
 # READING DATA
@@ -64,34 +61,51 @@ weather$dayofyear <- yday(weather$DATE)
 ```
 
 
-```{r}
+```{r, warning=FALSE, message=FALSE}
+
 # PLOT 1
+# 3 Year Chicago Public Transportation Trend + Weather
 
-# Average passengers over a three year period (2015 - 2017)
-# Divide by 3 to get average yearly data 
+# Shading Winters From 21st December to 30th March
+# Reference: https://stackoverflow.com/questions/18419628/creating-custom-legends-in-ggplot2
+
+
+df<-data.frame(xmin=as.Date(c('2015-01-01','2015-12-21','2016-12-21', '2017-12-21' )),
+               xmax=as.Date(c('2015-03-20','2016-03-30', '2017-03-30', '2017-12-31' )),
+               ymin=c(-Inf,-Inf),
+               ymax=c(Inf,Inf),
+               winters=c("Winters"))
+
+
 public_transport %>%
-  group_by(month, trip_identity) %>%
+  group_by(date, trip_identity) %>%
   summarise (count = sum(rides)) %>%
-  ggplot(mapping = aes(x = month, y=(count/3)/1000000, colour = trip_identity)) + 
-  geom_point() +
-  geom_line(mapping = aes( group = trip_identity)) +
-  theme(legend.title = element_blank()) + 
-  scale_y_continuous(labels = scales::comma) +
-  coord_cartesian( ylim = c(13, 25)) + 
-  labs(title ="Monthly Usage of Public Transport in Chicago Declines in Winter", 
-       subtitle = "Both buses & trains experience fall in usage",
-       x = "Month", y = "Total Number of Passengers (Millions)",
-       caption = "CTA Ridership Data 2015-2017") +
-  theme_bw() +
-  theme(plot.title = element_text(hjust = 0, size = 12, face = "bold"), 
-        plot.subtitle = element_text(size = 10, face = "bold"),
-        legend.title=element_blank())
-
-
+  ggplot(aes(x = date, y = count/1000)) +
+    geom_smooth(aes(color = trip_identity), se = FALSE, na.rm = TRUE) +
+    geom_rect(data=df,aes(xmin=xmin,ymin=ymin,xmax=xmax,ymax=ymax,fill=winters),
+                      alpha=0.15,inherit.aes=FALSE)+
+    scale_fill_manual(values=c("#FF66CC")) + 
+    labs(title ="Demand for Public Transport in Chicago is lowest in Winter", 
+         subtitle = "Train usage is more elastic to seasonal changes than bus usage.",
+         x = "", y = "Passengers Per Day (Thousands)",
+         caption = "CTA Ridership Data 2015-2017") +
+    theme_bw() +
+    theme(plot.title = element_text(hjust = 0, size = 12, face = "bold"), 
+          plot.subtitle = element_text(size = 10, face = "bold"),
+          legend.title=element_blank(),,
+          legend.spacing.x = unit(0.2, 'cm'))  + scale_x_date(date_labels = "%d %b %Y", 
+                                                              date_breaks = "1 year", 
+                                                              date_minor_breaks = "1 month") +
+    scale_y_continuous(labels = scales::comma) 
+ 
 ```
 
-```{r}
+
+
+
+```{r, warning=FALSE, message=FALSE}
 # PLOT 2
+# Weekly Demand of Public Transportation
 
 # Variation in usage by day of week
 # 3*52.19 == Number of weeks in 3 years
@@ -120,19 +134,23 @@ public_transport %>%
 
 
 
-```{r}
 
+```{r, warning=FALSE, message=FALSE}
+
+# PLOT 3
+# Physical Manifestations of Seasonal Changes
+# SNPW & PRECIPITATION LEVELS CHANGE
 
 weather %>%
   group_by(month) %>%
   summarize(avg_prcp = mean(PRCP, na.rm = TRUE), avg_snow = mean(SNOW, na.rm = TRUE)) %>%
   ggplot() +
-  geom_line(aes(x = month, y = avg_prcp, group = 1), colour = "cyan4") +
-  geom_point(aes(x = month, y = avg_prcp), colour = "dark blue") +
-  geom_line(aes(x = month, y = avg_snow, group = 1), colour = "indianred1") +
-  geom_point(aes(x = month, y = avg_snow), colour = "dark red")  +
+  geom_step(aes(x = month, y = avg_prcp, group = 1), linetype = 14, colour = "cyan4") +
+  #geom_point(aes(x = month, y = avg_prcp), colour = "dark blue") +
+  geom_step(aes(x = month, y = avg_snow, group = 1), linetype = 11, colour = "indianred1") +
+  #geom_point(aes(x = month, y = avg_snow), colour = "dark red")  +
   theme_bw() + 
-  annotate(geom="text", x=3.3, y=7, label="SNOW", color="indianred3") +
+  annotate(geom="text", x=3.6, y=7, label="SNOW", color="indianred3") +
   annotate(geom="text", x=7, y=4.7, label="PRECIPITATION", color="cyan4") +
   labs(title ="Larger Seasonal Variation in Snow than in Precipitation in Chicago", 
        subtitle = "Precipitation Slightly Higher During Summer ",
@@ -141,49 +159,14 @@ weather %>%
        caption = "National Centers for Environmental Information 2015-2017") +
   theme(plot.title = element_text(hjust = -0, size = 12, face = "bold"), 
         plot.subtitle = element_text(size = 10, face = "bold"))
-  
-
-
-weather %>%
-  group_by(month) %>%
-  summarize(avg_prcp = mean(PRCP, na.rm = TRUE), avg_snow = mean(SNOW, na.rm = TRUE)) %>%
-  ggplot() +
-  geom_area(aes(x = month, y = avg_prcp, group = 1), alpha =0.5, colour = "cyan4") +
-  geom_point(aes(x = month, y = avg_prcp), colour = "dark blue") +
-  geom_area(aes(x = month, y = avg_snow, group = 1), , alpha = 0.5, colour = "indianred1") +
-  geom_point(aes(x = month, y = avg_snow), colour = "dark red") 
-
-
-
 
 ```
 
 
 
 
-
-```{r}
-library(ggradar)
-library(scales)
-
-bus_trips %>%
-  
-
-
-mtcars %>%
-     add_rownames( var = "group" ) %>%
-     mutate_each(funs(rescale), -group) %>%
-     tail(4) %>% select(1:10) -> mtcars_radar
-
-ggradar(mtcars_radar) 
-```
-
-
-
-
-
-
-```{r}
+```{r, warning=FALSE, message=FALSE}
+# PLOT 4
 # SNOW DAY - AND AFTER
 
 snow_days <-
@@ -252,30 +235,10 @@ ggplot(snow_comparison) +
 
 
 
-```{r}
-library (pacman)
-p_load(gridExtra,grid)
 
 
-g.top <- ggplot(weather, aes(x = date, y = PRCP, ymin=0, ymax=PRCP)) +
-  geom_linerange() +
-  scale_y_continuous(limits=c(22,0),expand=c(0,0), trans="reverse")+
-  theme_classic() +
-  theme(plot.margin = unit(c(5,5,-32,6),units="points"),
-        axis.title.y = element_text(vjust = 0.3))+
-  labs(y = "Rain (mm)")
 
 
-g.bottom <- ggplot(train_trips, aes(x = date, y = rides)) +
-  geom_line() +
-  theme_classic() +
-  theme(plot.margin = unit(c(0,5,1,1),units="points")) +
-  labs(x = "Date", y = "River flow (m/s)")
-
-
-grid.arrange(g.top,g.bottom, heights = c(1/5, 4/5))
-
-```
 
 
 
@@ -299,62 +262,32 @@ grid.arrange(g.top,g.bottom, heights = c(1/5, 4/5))
 
 
 ```{r}
-
-install.packages(scales)
-
-library(scales)
+# EXTRA PLOT
+# AVERAGE MONTHLY 
 
 
-df$Month <- as.Date(df$Month)
-
-
-ggplot(weather, aes(x = as.Date(DATE), y = PRCP)) + 
-  #geom_bar(stat = "identity") 
-  geom_line()
-
-+
-  theme_bw() +
-  labs(x = "Month", y = "Average Visits per User") 
-
-
-+
-  scale_x_date(labels = date_format("%m-%Y"))
-```
-
-
-
-
-```{r}
-
-# Shading Winters over 3 months of Data
-# Reference: https://stackoverflow.com/questions/18419628/creating-custom-legends-in-ggplot2
-
-
-df<-data.frame(xmin=as.Date(c('2015-01-01','2015-12-21','2016-12-21', '2017-12-21' )),
-               xmax=as.Date(c('2015-03-20','2016-03-30', '2017-03-30', '2017-12-31' )),
-               ymin=c(-Inf,-Inf),
-               ymax=c(Inf,Inf),
-               winters=c("Winters"))
-
-ggplot(public_transport, aes(x = date, y = rides)) +
-  geom_smooth(aes(color = trip_identity)) +
-  geom_rect(data=df,aes(xmin=xmin,ymin=ymin,xmax=xmax,ymax=ymax,fill=winters),
-                    alpha=0.4,inherit.aes=FALSE)+
-  scale_fill_manual(values=c("#CCFFFF")) + 
+# Average passengers over a three year period (2015 - 2017)
+# Divide by 3 to get average yearly data 
+public_transport %>%
+  group_by(month, trip_identity) %>%
+  summarise (count = sum(rides)) %>%
+  ggplot(mapping = aes(x = month, y=(count/3)/1000000, colour = trip_identity)) + 
+  geom_point() +
+  geom_line(mapping = aes( group = trip_identity)) +
+  theme(legend.title = element_blank()) + 
+  scale_y_continuous(labels = scales::comma) +
+  coord_cartesian( ylim = c(13, 25)) + 
   labs(title ="Monthly Usage of Public Transport in Chicago Declines in Winter", 
-       subtitle = "Train usage is more elastic to seasonal changes.",
-       x = "", y = "Total Number of Passengers Per Day (Millions)",
+       subtitle = "Both buses & trains experience fall in usage",
+       x = "Month", y = "Total Number of Passengers (Millions)",
        caption = "CTA Ridership Data 2015-2017") +
   theme_bw() +
   theme(plot.title = element_text(hjust = 0, size = 12, face = "bold"), 
         plot.subtitle = element_text(size = 10, face = "bold"),
-        legend.title=element_blank(),,
-        legend.spacing.x = unit(0.2, 'cm'))  + scale_x_date(date_labels = "%d %b %Y", 
-                                                            date_breaks = "1 year", 
-                                                            date_minor_breaks = "1 month")
+        legend.title=element_blank())
+
 
 ```
-
 
 
 
