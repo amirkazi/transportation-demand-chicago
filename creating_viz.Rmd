@@ -2,7 +2,9 @@
 title: "graph_exploration"
 author: "Amir Kazi"
 date: "1/27/2019"
-output: html_document
+output:
+  html_document: 
+    code_folding: hide
 ---
 
 
@@ -85,7 +87,7 @@ public_transport %>%
     geom_rect(data=df,aes(xmin=xmin,ymin=ymin,xmax=xmax,ymax=ymax,fill=winters),
                       alpha=0.15,inherit.aes=FALSE)+
     scale_fill_manual(values=c("#FF66CC")) + 
-    labs(title ="Demand for Public Transport in Chicago is lowest in Winter", 
+    labs(title ="Daily Demand for Public Transport in Chicago is lowest in Winter", 
          subtitle = "Train usage is more elastic to seasonal changes than bus usage.",
          x = "", y = "Passengers Per Day (Thousands)",
          caption = "CTA Ridership Data 2015-2017") +
@@ -139,7 +141,7 @@ public_transport %>%
 
 # PLOT 3
 # Physical Manifestations of Seasonal Changes
-# SNPW & PRECIPITATION LEVELS CHANGE
+# SNOW & PRECIPITATION LEVELS CHANGE
 
 weather %>%
   group_by(month) %>%
@@ -150,12 +152,12 @@ weather %>%
   geom_step(aes(x = month, y = avg_snow, group = 1), linetype = 11, colour = "indianred1") +
   #geom_point(aes(x = month, y = avg_snow), colour = "dark red")  +
   theme_bw() + 
-  annotate(geom="text", x=3.6, y=7, label="SNOW", color="indianred3") +
-  annotate(geom="text", x=7, y=4.7, label="PRECIPITATION", color="cyan4") +
+  annotate(geom="text", x=3.55, y=7, label="SNOW", color="indianred3", fontface =4) +
+  annotate(geom="text", x=7, y=4.9, label="PRECIPITATION", color="cyan4", fontface =4) +
   labs(title ="Larger Seasonal Variation in Snow than in Precipitation in Chicago", 
        subtitle = "Precipitation Slightly Higher During Summer ",
-       x = "Month", 
-       y = "Average Per Month (Inches)",
+       x = "", 
+       y = "Monthly Average (Inches)",
        caption = "National Centers for Environmental Information 2015-2017") +
   theme(plot.title = element_text(hjust = -0, size = 12, face = "bold"), 
         plot.subtitle = element_text(size = 10, face = "bold"))
@@ -231,60 +233,21 @@ ggplot(snow_comparison) +
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ```{r}
-# EXTRA PLOT
-# AVERAGE MONTHLY 
+# Tile Graph of Precipitation Levels VS Riders
 
 
-# Average passengers over a three year period (2015 - 2017)
-# Divide by 3 to get average yearly data 
-public_transport %>%
-  group_by(month, trip_identity) %>%
-  summarise (count = sum(rides)) %>%
-  ggplot(mapping = aes(x = month, y=(count/3)/1000000, colour = trip_identity)) + 
-  geom_point() +
-  geom_line(mapping = aes( group = trip_identity)) +
-  theme(legend.title = element_blank()) + 
-  scale_y_continuous(labels = scales::comma) +
-  coord_cartesian( ylim = c(13, 25)) + 
-  labs(title ="Monthly Usage of Public Transport in Chicago Declines in Winter", 
-       subtitle = "Both buses & trains experience fall in usage",
-       x = "Month", y = "Total Number of Passengers (Millions)",
-       caption = "CTA Ridership Data 2015-2017") +
-  theme_bw() +
-  theme(plot.title = element_text(hjust = 0, size = 12, face = "bold"), 
-        plot.subtitle = element_text(size = 10, face = "bold"),
-        legend.title=element_blank())
+total_riders_per_day <-
+  public_transport %>%
+  group_by (date) %>%
+  summarize(riders = sum(rides))
+
+
+x<- merge(total_riders_per_day, weather, by = "date")
+
+x %>%
+  ggplot() +
+  geom_contour(aes(x = PRCP, y = SNOW, z = riders))
 
 
 ```
@@ -296,36 +259,21 @@ public_transport %>%
 
 
 
-```{r}
-library (pacman)
-p_load ("rgdal", "maptools", "plyr")
-install.packages("ggmap")
-library(rgdal)     # R wrapper around GDAL/OGR
-library(ggplot2)   # for general plotting
-library(ggmap)    # for fortifying shapefiles
 
-# First read in the shapefile, using the path to the shapefile and the shapefile name minus the
-# extension as arguments
-shapefile <- readOGR(dsn=path.expand("~/Desktop/transportation-demand-chicago//ChiComArea.shp"))
 
-# Next the shapefile has to be converted to a dataframe for use in ggplot2
-shapefile_df <- fortify(shapefile)
 
-# Now the shapefile can be plotted as either a geom_path or a geom_polygon.
-# Paths handle clipping better. Polygons can be filled.
-# You need the aesthetics long, lat, and group.
-map <- ggplot() +
-geom_path(data = shapefile_df, 
-          aes(x = long, y = lat, group = group),
-          color = 'gray', fill = 'white', size = .2)
 
-print(map) 
 
-# Using the ggplot2 function coord_map will make things look better and it will also let you change
-# the projection. But sometimes with large shapefiles it makes everything blow up.
-map_projected <- map +
-  coord_map()
-  
-print(map_projected)
 
-```
+
+
+
+
+
+
+
+
+
+
+
+

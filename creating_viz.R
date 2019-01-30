@@ -142,3 +142,78 @@ ggplot(x, aes(x=month, y=abs(Diff) )) +
   geom_point() + geom_smooth() +
   scale_y_continuous(labels = scales::comma) 
 
+
+
+
+
+
+
+```{r, include= FALSE, echo= FALSE}
+# EXTRA PLOT
+# AVERAGE MONTHLY 
+
+
+# Average passengers over a three year period (2015 - 2017)
+# Divide by 3 to get average yearly data 
+public_transport %>%
+  group_by(month, trip_identity) %>%
+  summarise (count = sum(rides)) %>%
+  ggplot(mapping = aes(x = month, y=(count/3)/1000000, colour = trip_identity)) + 
+  geom_point() +
+  geom_line(mapping = aes( group = trip_identity)) +
+  theme(legend.title = element_blank()) + 
+  scale_y_continuous(labels = scales::comma) +
+  coord_cartesian( ylim = c(13, 25)) + 
+  labs(title ="Monthly Usage of Public Transport in Chicago Declines in Winter", 
+       subtitle = "Both buses & trains experience fall in usage",
+       x = "Month", y = "Total Number of Passengers (Millions)",
+       caption = "CTA Ridership Data 2015-2017") +
+  theme_bw() +
+  theme(plot.title = element_text(hjust = 0, size = 12, face = "bold"), 
+        plot.subtitle = element_text(size = 10, face = "bold"),
+        legend.title=element_blank())
+
+
+```
+
+
+
+
+
+
+
+
+```{r, include = FALSE, echo = FALSE}
+library (pacman)
+p_load ("rgdal", "maptools", "plyr")
+install.packages("ggmap")
+library(rgdal)     # R wrapper around GDAL/OGR
+library(ggplot2)   # for general plotting
+library(ggmap)    # for fortifying shapefiles
+
+# First read in the shapefile, using the path to the shapefile and the shapefile name minus the
+# extension as arguments
+shapefile <- readOGR(dsn=path.expand("~/Desktop/transportation-demand-chicago//ChiComArea.shp"))
+
+# Next the shapefile has to be converted to a dataframe for use in ggplot2
+shapefile_df <- fortify(shapefile)
+
+# Now the shapefile can be plotted as either a geom_path or a geom_polygon.
+# Paths handle clipping better. Polygons can be filled.
+# You need the aesthetics long, lat, and group.
+map <- ggplot() +
+  geom_path(data = shapefile_df, 
+            aes(x = long, y = lat, group = group),
+            color = 'gray', fill = 'white', size = .2)
+
+print(map) 
+
+# Using the ggplot2 function coord_map will make things look better and it will also let you change
+# the projection. But sometimes with large shapefiles it makes everything blow up.
+map_projected <- map +
+  coord_map()
+
+print(map_projected)
+
+```
+
