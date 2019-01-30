@@ -1,5 +1,5 @@
 ---
-title: "graph_exploration"
+title: "Trends & Variations in Transportation Demand in Chicago"
 author: "Amir Kazi"
 date: "1/27/2019"
 output:
@@ -95,7 +95,7 @@ public_transport %>%
     theme_bw() +
     theme(plot.title = element_text(hjust = 0, size = 12, face = "bold"), 
           plot.subtitle = element_text(size = 10, face = "bold"),
-          legend.title=element_blank(),,
+          legend.title=element_blank(),
           legend.spacing.x = unit(0.2, 'cm'))  + scale_x_date(date_labels = "%d %b %Y", 
                                                               date_breaks = "1 year", 
                                                               date_minor_breaks = "1 month")+
@@ -105,6 +105,12 @@ public_transport %>%
  
 ```
 
+
+Between 2015 and 2017, it is apparent that there is a variation in the demand
+for buses and trains throughout the year, peaking in summer time, and plunging
+in the winter. However, while trains experience a roughly similar pattern each year,
+the demand for buses seems to be falling across years. These patterns can impact
+the allocation and deployment of transportation services by the CTA across seasons.
 
 
 ```{r, warning=FALSE, message=FALSE}
@@ -153,7 +159,10 @@ p <- public_transport %>%
 
 ```
 
-
+Comparing bus usage across different months between 2015 - 2017, it can be seen that
+total bus usage has declined for each month across these periods. However, relatively,
+demand is still higher in summer months than in winter months. The overline decline may be
+due to a shift towards other forms of transportation such as taxis and other ride-sharing vehicles.
 
 
 ```{r, warning=FALSE, message=FALSE}
@@ -185,7 +194,7 @@ public_transport %>%
 
 ```
 
-
+Comparisons within a week indicate that highest usage is during weekdays, possibly due to work or school transits. Deployments of public transportation are also more spread out on weekends by the CTA to ensure more efficient use.
 
 
 ```{r, warning=FALSE, message=FALSE}
@@ -213,6 +222,7 @@ weather %>%
 
 ```
 
+Winter alone doesn't cause a decline in demand - there is a very real effect due to an increased accumulation of snow in winter months which may make it more inconvenient to take public transportation, especially trains, if it requires walking large distances to a train station.
 
 
 
@@ -277,6 +287,9 @@ ggplot(snow_comparison) +
 ```
 
 
+For rides taken on the day after a snow day, it can be seen that there is an overall decrease in ridership throughout different ridership levels for buses and trains. This may indicate a preference to stay indoors, to use personal vehicles, or to shift towards taxis or ride-share options.
 
+
+Further research will assess impact of weather on taxi and divvy demand, as well as variations in demand resulting from other factors such as Chicago Bears/Cubs games, concerts/conferences, and large-scale events (such as Lolapalooza).
 
 
