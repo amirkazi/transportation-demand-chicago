@@ -142,6 +142,39 @@ weather %>%
         plot.subtitle = element_text(size = 10, face = "bold"))
   
 
+
+weather %>%
+  group_by(month) %>%
+  summarize(avg_prcp = mean(PRCP, na.rm = TRUE), avg_snow = mean(SNOW, na.rm = TRUE)) %>%
+  ggplot() +
+  geom_area(aes(x = month, y = avg_prcp, group = 1), alpha =0.5, colour = "cyan4") +
+  geom_point(aes(x = month, y = avg_prcp), colour = "dark blue") +
+  geom_area(aes(x = month, y = avg_snow, group = 1), , alpha = 0.5, colour = "indianred1") +
+  geom_point(aes(x = month, y = avg_snow), colour = "dark red") 
+
+
+
+
+```
+
+
+
+
+
+```{r}
+library(ggradar)
+library(scales)
+
+bus_trips %>%
+  
+
+
+mtcars %>%
+     add_rownames( var = "group" ) %>%
+     mutate_each(funs(rescale), -group) %>%
+     tail(4) %>% select(1:10) -> mtcars_radar
+
+ggradar(mtcars_radar) 
 ```
 
 
@@ -149,8 +182,64 @@ weather %>%
 
 
 
+```{r}
+# SNOW DAY - AND AFTER
+
+snow_days <-
+  weather %>% 
+  filter (SNOW > 0)
+
+day_after_snow <-
+    snow_days %>%
+    select(date) + 1
+  
+train_snow_days <- 
+  merge(snow_days, train_trips, by = "date") %>%
+  group_by(date) %>%
+  summarize (riders = sum(rides)) %>%
+  mutate (type = "TRAIN", day_type = "SNOW")
+
+train_after_snow <- 
+  merge(day_after_snow, train_trips, by = "date") %>%
+  group_by(date) %>%
+  summarize (riders = sum(rides)) %>%
+  mutate (type = "TRAIN", day_type = "DAY_AFTER_SNOW")
+
+bus_snow_days <- 
+  merge(snow_days, bus_trips, by = "date") %>%
+  group_by(date) %>%
+  summarize (riders = sum(rides)) %>%
+  mutate (type = "BUS", day_type = "SNOW")
+
+bus_after_snow <- 
+  merge(day_after_snow, bus_trips, by = "date") %>%
+  group_by(date) %>%
+  summarize (riders = sum(rides)) %>%
+  mutate (type = "BUS", day_type = "DAY_AFTER_SNOW")
 
 
+snow_comparison <- do.call("rbind", list(train_snow_days, train_after_snow, bus_snow_days,bus_after_snow ))
+snow_comparison$day_type <- factor(snow_comparison$day_type, levels = c("SNOW", "DAY_AFTER_SNOW"))
+
+ggplot(snow_comparison) +
+  geom_violin(aes(x = day_type, y = riders/1000,  fill = type)) + 
+  scale_x_discrete(labels = c('Rides Taken on Snow Day','Rides Taken on Day After Snow Day')) +
+  labs(title ="Fewer Public Transportation Riders on Day After Snow", 
+       subtitle = "Not all days experience a decline, however.",
+       x = "", 
+       y = "Riders (Thousands)",
+       caption = "NCEI & CTA Rider Data 2015-2017") +
+  theme_bw() +
+  theme(plot.title = element_text(hjust = -0, size = 12, face = "bold"), 
+        plot.subtitle = element_text(size = 10, face = "bold"),
+        legend.title=element_blank(),
+        legend.key = element_rect(fill = "white"),
+        legend.spacing.x = unit(0.2, 'cm'))
+
+
+
+
+```
 
 
 
