@@ -4,3 +4,5 @@ In this repository, we explore the changing demand patterns for transportation i
 
 We also wish to assess if these factors induce users to switch between different forms of public transport (Trains, Buses), as well as away from public transport and towards other forms of transport, such as taxis or bikes (Divvy Bikes).
 
+##### To view current research & stay up to date:
+https://amirkazi.github.io/transportation-demand-chicago/
