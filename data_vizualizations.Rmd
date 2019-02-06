@@ -1,0 +1,225 @@
+---
+title: "Trends & Variations in Transportation Demand in Chicago"
+author: "Amir Kazi"
+date: "February 2019"
+output:
+  html_document: 
+    code_folding: hide
+---
+
+```{r setup, include=FALSE}
+library (tidyverse)
+library (here)
+library(scales)
+library(ggrepel)
+library(gtools)
+library(forcats)
+library(lubridate)  # lubridate masks object 'here' from package 'here'.
+```
+
+
+```{r}
+# READING PUBLIC TRANSPORTATION DATA
+bus_trips <- read.csv (here::here("data", "bus_data.csv"))
+train_trips <- read.csv (here::here("data", "train_data.csv"))
+```
+
+
+```{r}
+# READING WEATHER DATA
+#weather_descriptions <- read.csv(here::here("data", "weather.csv"))
+#weather <- read.csv(here::here("data", "midway_weather.csv")) 
+```
+
+```{r}
+# READING DIVVY DATA
+divvy_trips <- read.csv (here::here("data", "Divvy_Trips1.csv"))
+```
+
+```{r}
+# GETTING TAXI START TIMESTAMPS
+taxi_2015 <- read.csv (here::here("data", "2015_Taxi_Trips1.csv"))[,1]
+taxi_2016 <- read.csv (here::here("data", "2016_Taxi_Trips1.csv"))[,1]
+taxi_2017 <- read.csv (here::here("data", "2017_Taxi_Trips1.csv"))[,1]
+
+taxi_start_times <- mdy_hms(fct_c(taxi_2015, taxi_2016, taxi_2017))
+taxi_start_times_date <- as.data.frame(date(taxi_start_times))
+colnames(taxi_start_times_date) <- c("date")
+remove(taxi_2015, taxi_2016, taxi_2017)
+```
+
+
+```{r}
+# CREATING PUBLIC TRANSPORTATION DATAFRAME
+train_trips$date <- ymd(train_trips$date)
+train_trips$dayofweek <- lubridate::wday(train_trips$date, label=TRUE)  
+train_trips$day <- day(train_trips$date)
+train_trips$month <- lubridate::month(train_trips$date, label = TRUE)
+train_trips$year <- year(train_trips$date)
+
+bus_trips$date <- ymd(bus_trips$date)
+bus_trips$dayofweek <- lubridate::wday(bus_trips$date, label=TRUE)  
+bus_trips$day <- day(bus_trips$date)
+bus_trips$month <- lubridate::month(bus_trips$date, label = TRUE)
+bus_trips$year <- year(bus_trips$date)
+
+train_trips$trip_identity = 'train'
+bus_trips$trip_identity = 'bus'
+
+train_trips$route = NA
+bus_trips$station_id = NA
+bus_trips$stationname = NA
+
+public_transport = rbind(train_trips,bus_trips)
+public_transport = filter (public_transport, year(date) != 2018 )
+
+public_transport$dayofweek <- factor(public_transport$dayofweek, levels = c("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"))
+```
+
+
+```{r}
+# SETTING WEATHER DATAFRAME
+#weather$date <- ymd(weather$DATE)
+#weather$dayofweek <- wday(weather$DATE, label=TRUE)  
+#weather$day <- day(weather$DATE)
+#weather$month <- month(weather$DATE, label = TRUE)
+#weather$year <- year(weather$DATE)
+#weather$dayofyear <- yday(weather$DATE)
+```
+
+# PLOT 1: Variation in demand between 2015 - 2017
+
+```{r}
+# PUBLIC TRANSPORTATION DEMAND GROUPED BY DAY
+public_transport_by_day <-
+  public_transport %>%
+    group_by(date, trip_identity) %>%
+    summarise(riders = sum(rides)) %>%
+    select(date, riders, trip_identity)
+```
+
+```{r}
+# DIVVY DEMAND GROUPED BY DAY
+divvy_trips$date <- mdy_hms(divvy_trips$START.TIME)
+
+divvy_by_day <-
+  divvy_trips %>%
+    group_by(date = date(date)) %>%
+    summarize (riders = n())
+
+divvy_by_day$trip_identity = 'divvy'
+```
+
+```{r}
+# TAXI DEMAND GROUPED BY DAY
+taxi_by_day <-
+  taxi_start_times_date %>%
+  filter(date != '2017-08-01') %>%
+    group_by(date = date) %>%
+    summarize (riders = n())
+
+taxi_by_day$trip_identity = 'taxi'
+```
+
+```{r}
+# MERGED DATAFRAME OF TRANSPORTATION
+total_demand_by_day <- bind_rows(public_transport_by_day,divvy_by_day, taxi_by_day)
+```
+
+
+```{r}
+# WINTER
+# Shading Winters From 21st December to 30th March
+# Reference: https://stackoverflow.com/questions/18419628/creating-custom-legends-in-ggplot2
+
+df<-data.frame(xmin=as.Date(c('2015-01-01','2015-12-21','2016-12-21', '2017-12-21' )),
+               xmax=as.Date(c('2015-03-20','2016-03-30', '2017-03-30', '2017-12-31' )),
+               ymin=c(-Inf,-Inf),
+               ymax=c(Inf,Inf),
+               winters=c("Winters"))
+```
+
+
+```{r}
+# MY THEME
+
+my_theme <- 
+  theme(
+    plot.title = element_text(hjust = 0, size = 12, face = "bold", family="Times"), 
+    plot.subtitle = element_text(size = 10, face = "bold", family="Times"),
+    legend.title=element_blank(),
+    legend.spacing.x = unit(0.2, 'cm'),
+    )
+```
+
+```{r}
+# CHOOSING COLOURS FOR TYPE OF TRANSPORTATION
+taxi_color <- "#fec44f"  #yellow
+divvy_color <- "#6baed6" #blue
+bus_color <- "#99d8c9" #green
+train_color <- "#c51b8a" #violet
+winter_color <- "#7a859f"
+```
+
+
+
+
+```{r, warning=FALSE, message=FALSE}
+# PLOTTING GRAPH of 3 Year Chicago Public Transportation Trend + Weather
+
+total_demand_by_day %>%
+  ggplot(aes(x = date, y = riders/1000)) +
+  geom_smooth(aes(color = trip_identity), se = FALSE, na.rm = TRUE) +
+  geom_rect(data=df,aes(xmin=xmin,ymin=ymin,xmax=xmax,ymax=ymax, fill = 'winters'),
+                    alpha=0.15,inherit.aes=FALSE, fill = winter_color) + 
+  scale_color_manual(values=c(bus_color,divvy_color, taxi_color, train_color)) +
+  scale_x_date(date_labels = "%d %b %Y") +
+  theme_bw() +
+  my_theme +
+  theme(legend.position="none") +
+  scale_y_continuous(labels = scales::comma) +
+  geom_vline(xintercept = as.Date(c("2015-01-01", "2016-01-01", "2017-01-01", "2018-01-01")), 
+             linetype = 4)  +
+  annotate("label", x = as.Date("2015-06-01"), y = 500, 
+           label = 'TRAIN', color = train_color, fontface =2,  family="Times")  +
+  annotate("label", x = as.Date("2016-06-01"), y = 670, 
+           label = 'BUS', color = bus_color, fontface =2,  family="Times") +
+  annotate("label", x = as.Date("2016-06-01"), y = 100, 
+           label = 'TAXI', color = taxi_color, fontface =2,  family="Times") +
+  annotate("label", x = as.Date("2015-05-01"), y = 40, 
+           label = 'DIVVY', color = divvy_color, fontface =2,  family="Times")  +
+  annotate("label", x = as.Date("2016-03-21"), y = 320, 
+           label = 'WINTER', color = winter_color, fontface =2,  family="Times") +
+  labs(title ="Demand for Public Transport & Divvy In Chicago Is Lowest In Winter", 
+     subtitle = "Taxi Usage Less Elastic To Seasonal Changes.",
+     x = "", y = "Passengers Per Day (Thousands)",
+     caption = "CTA Ridership Data 2015-2017")
+
+
+
+```
+
+
+```{r}
+total_demand_by_day %>%
+  ggplot(aes(x = date, y = riders/1000)) +
+    geom_smooth(aes(color = trip_identity), se = FALSE, na.rm = TRUE) +
+    geom_rect(data=df,aes(xmin=xmin,ymin=ymin,xmax=xmax,ymax=ymax,fill=winters),
+                      alpha=0.15,inherit.aes=FALSE)+
+    scale_fill_manual(values=c("#FF66CC")) + 
+    labs(title ="Daily Demand for Public Transport in Chicago is lowest in Winter", 
+         subtitle = "Train usage is more elastic to seasonal changes than bus usage.",
+         x = "", y = "Passengers Per Day (Thousands)",
+         caption = "CTA Ridership Data 2015-2017") +
+    theme_bw() +
+    theme(plot.title = element_text(hjust = 0, size = 12, face = "bold"), 
+          plot.subtitle = element_text(size = 10, face = "bold"),
+          legend.title=element_blank(),
+          legend.spacing.x = unit(0.2, 'cm'))  + scale_x_date(date_labels = "%d %b %Y", 
+                                                              date_breaks = "1 year", 
+                                                              date_minor_breaks = "1 month")+
+    scale_y_continuous(labels = scales::comma) +
+  geom_vline(xintercept = as.Date(c("2015-01-01", "2016-01-01", "2017-01-01", "2018-01-01"))
+             , linetype = 3) 
+```
+
