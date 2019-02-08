@@ -70,9 +70,6 @@ weather$dayofyear <- yday(weather$DATE)
 ```
 
 
-
-
-
 ```{r}
 # MY THEME
 
@@ -85,8 +82,10 @@ my_theme <-
     plot.caption = element_text(size = 8, face = "bold", family="Courier"),
     legend.title=element_blank(),
     legend.spacing.x = unit(0.2, 'cm'),
-    panel.border = element_rect(colour = "#969696", fill=NA, size=2)
-    )
+    panel.border = element_rect(colour = "#969696", fill=NA, size=2),
+    panel.grid.major = element_blank(), 
+    panel.grid.minor = element_blank())
+    
 
 # CHOOSING COLOURS FOR TYPE OF TRANSPORTATION
 taxi_color <- "#fec44f"  #yellow
@@ -97,8 +96,6 @@ winter_color <- "#7a859f"
 divvy_female_color <- "#2171b5"
 divvy_male_color <- "#6baed6"
 ```
-
-
 
 # PLOT 1: Variation in demand between 2015 - 2017
 
@@ -188,7 +185,7 @@ total_demand_by_day %>%
   labs(title ="Demand for Public Transport & Divvy In Chicago Is Lowest In Winter", 
      subtitle = "Taxi Usage Less Elastic To Seasonal Changes",
      x = "", y = "Passengers Per Day (Thousands)",
-     caption = "CTA Ridership Data 2015-2017")
+     caption = "CTA Ridership Data 2015-2017") 
 
 ```
 
@@ -223,7 +220,8 @@ ggplot(data = divvy_by_gender) +
      subtitle = "Significantly Fewer Female Riders, Especially At Night",
      x = "TIME OF DAY", y = "Passengers Per Day",
      caption = "Divvy Ridership Data 2015-2017") + 
-  scale_x_continuous(sec.axis = dup_axis()) +
+  scale_x_continuous(sec.axis = dup_axis(), breaks = c(0,6,12,17,22), 
+                     labels = c("Midnight", "6 am", "Noon", "5 pm", "10 pm" )) +
   theme(axis.title.x = element_text(hjust = 0.2))
 
 #remove(divvy_by_gender)
@@ -302,7 +300,7 @@ ggplot(snow_comparison) +
 
 
 
-
+# PLOT 4
 ```{r, warning=FALSE, message=FALSE}
 # reference: https://ibecav.github.io/slopegraph/
 
@@ -359,4 +357,106 @@ ggplot(p, aes(x = year, y = riders, group = month)) +
     scale_y_continuous(labels = scales::comma) 
 
 ```
+
+
+# PLOT 5: Taxi Heat Map
+```{r}
+# GETTING TAXI START TIMESTAMPS
+#taxi_2015 <- read.csv (here::here("data", "2015_Taxi_Trips1.csv"))[,1]
+#taxi_2016 <- read.csv (here::here("data", "2016_Taxi_Trips1.csv"))[,1]
+#taxi_2017 <- read.csv (here::here("data", "2017_Taxi_Trips1.csv"))[,1]
+
+#taxi_start_times <- mdy_hms(fct_c(taxi_2015, taxi_2016, taxi_2017))
+#taxi_start_times_date <- as.data.frame(taxi_start_times)
+#colnames(taxi_start_times_date) <- c("date")
+#remove(taxi_2015, taxi_2016, taxi_2017)
+
+taxi_start_times_date$hour <- hour(taxi_start_times_date$date)
+taxi_start_times_date$weekday <- lubridate::wday(taxi_start_times_date$date, label = TRUE)
+
+num_days <- n_distinct(date(taxi_start_times_date$date))
+
+taxi_light <- "#ffffb2"
+taxi_dark <- "#cc4c02"
+
+taxi_by_hour <-
+  taxi_start_times_date %>%
+  group_by(weekday, hour) %>%
+  summarize(count = n())
+
+taxi_by_hour$weekday <- factor(taxi_by_hour$weekday, levels = c("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"))
+taxi_by_hour$hour <- as.factor (taxi_by_hour$hour)
+taxi_by_hour$hour <- factor(taxi_by_hour$hour, 
+                            levels = rev(c("6", "7","8", "9","10", "11","12", "13","14", "15","16", 
+                                       "17","18", "19",
+                                       "20", "21","22", "23","0", "1","2", "3","4", "5")))
+
+
+ggplot(data = taxi_by_hour, aes(x = weekday, y = hour,  fill = count/num_days)) +
+  geom_tile() +
+  scale_fill_gradient(low = taxi_light, high = taxi_dark,name = "Taxi Trips", labels = comma) +
+  theme_bw() +
+  my_theme + 
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +  
+  theme(axis.title.x=element_blank(),
+        axis.title.y=element_blank(),
+        axis.ticks.y=element_blank(),
+        axis.ticks.x=element_blank(),
+        axis.text.x = element_text(size = 8, face = "bold")) +
+  scale_x_discrete (position = "top", expand = c(0,0)) +
+  theme (legend.key = element_rect(fill = "black"),
+        legend.spacing.x = unit(0.2, 'cm'),
+        legend.text = element_text(family = "Courier", size = 8, face = "bold"),
+        legend.title = element_text(family = "Courier", size = 8, face = "bold"),
+        legend.background = element_rect(fill="white", size=1, linetype="solid",colour ="#969696"))
+```
+  
+
+  
+  
+
+# PLOT 6: Weekly distribution for Public Transport
+
+```{r}
+temp <- 
+  public_transport %>%
+    group_by(dayofweek, trip_identity) %>%
+    summarise(count = (sum(rides)/(3*52.19))/1000)
+
+bus_point <-  
+  temp %>%
+    filter(trip_identity == "bus")
+
+train_point <-  
+  temp %>%
+    filter(trip_identity == "train")
+  
+ggplot()  +
+  geom_point(data = bus_point, aes(x = dayofweek, y = count), colour = bus_color, size = 5, stroke = 1) + 
+  geom_point(data = train_point, aes(x = dayofweek, y = count), colour = train_color, size = 5, stroke = 1) + 
+  geom_line(data = temp, mapping = aes(x = dayofweek, y=count),  alpha = 0.3)  +
+  scale_y_continuous(labels = scales::comma) +
+  coord_cartesian( ylim = c(200, 900)) + 
+  labs(title ="Usage of Public Transport in Chicago is Highest on Weekdays", 
+       subtitle = "Weekends see a significant drop in riders",
+       x = "Day of Week", y = "Average Weekly Passengers (Thousands)",
+       caption = "CTA Ridership Data 2015-2017") +
+  theme_bw()  + 
+  theme(plot.title = element_text(hjust = -0, size = 12, face = "bold"), 
+        plot.subtitle = element_text(size = 10, face = "bold"), 
+        legend.title=element_blank(),
+        legend.key = element_rect(fill = "white")) +
+  coord_flip() +
+  my_theme + 
+  annotate("label", x = 5.5, y = 370, 
+         label = 'TRAIN', color = train_color, fontface =2,  family="Courier") + 
+  annotate("label", x = 6.5, y = 510, 
+         label = 'BUS', color = bus_color, fontface =2,  family="Courier") + 
+  theme(legend.position="none",
+        axis.title.y=element_blank(),
+        axis.ticks.y=element_blank()
+        )
+```
+
+
 
