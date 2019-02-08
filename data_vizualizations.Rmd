@@ -186,7 +186,7 @@ total_demand_by_day %>%
   labs(title ="Demand for Public Transport & Divvy In Chicago Is Lowest In Winter", 
      subtitle = "Taxi Usage Less Elastic To Seasonal Changes",
      x = "", y = "Passengers Per Day (Thousands)",
-     caption = "CTA Ridership Data\n 2015-2017") 
+     caption = "CTA Ridership Data\n 2015-2017\n *Taxi Data till July 2017") 
 ```
 
 
@@ -509,9 +509,34 @@ ggplot(data = taxi_by_hour, aes(x = weekday, y = hour,  fill = count/taxi_num_da
        subtitle = "Weekend Rush Drives Taxis Late Into The Night",
        x = "", 
        y = "",
-       caption = "Taxi Trips Data\n 2015-2017") 
+       caption = "Chicago Taxi Trips Data\n 2015-2017") 
 ```
   
+```{r}
+# Physical Manifestations of Seasonal Changes
+# SNOW & PRECIPITATION LEVELS CHANGE
 
-  
-  
+weather %>%
+  group_by(month) %>%
+  summarize(avg_prcp = mean(PRCP, na.rm = TRUE), avg_snow = mean(SNOW, na.rm = TRUE)) %>%
+  ggplot() +
+  geom_step(aes(x = month, y = avg_prcp, group = 1), colour = "cyan4") +
+  geom_step(aes(x = month, y = avg_snow, group = 1), colour = "indianred1") +
+  theme_bw() + 
+  annotate(geom="text", x=3.55, y=7, label="SNOW", color="indianred3", fontface =4) +
+  annotate(geom="text", x=7, y=4.9, label="PRECIPITATION", color="cyan4", fontface =4) +
+  labs(title ="Larger Seasonal Variation in Snow than in Precipitation in Chicago", 
+       subtitle = "Precipitation Slightly Higher During Summer ",
+       x = "", 
+       y = "Monthly Average (Inches)",
+       caption = "National Centers for\n Environmental Information 2015-2017") +
+  my_theme +
+  annotate("label", x=3.55, y=7,
+           label = 'SNOW', color = train_color, fontface =2,  family="Courier") +
+  annotate("label", x=7, y=4.9,
+           label = 'PRECIPITATION', color = train_color, fontface =2,  family="Courier") 
+
+```
+
+
+
