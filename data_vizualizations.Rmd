@@ -189,6 +189,10 @@ total_demand_by_day %>%
      caption = "CTA Ridership Data\n 2015-2017\n *Taxi Data till July 2017") 
 ```
 
+Between 2015 - 2017, there are two very clear trends:
+1) For Trains & Divvy bikes, there is a prominent seasonal variation. In the summer, demand peaks, while in the winter, demand is at its lowest.
+2) Demand for Buses & Taxis has decreased throughout this time period. There also doesn't seem to be a seasonal component accompanying this decline.
+These patterns can impact the allocation and deployment of transportation services by the CTA across seasons. One possible explanation for the decline of demand for buses and taxis might be an increased reliance on ride-share services such as Uber, Lyft etc.
 
 
 
@@ -235,6 +239,7 @@ ggplot()  +
         )
 ```
 
+For buses and trains, comparisons within a week indicate that highest usage is during weekdays, possibly due to work or school transits. Deployments of public transportation are also more spread out on weekends by the CTA to ensure more efficient use.
 
 # PLOT 2B: Weekly distribution for Taxis & Divvy
 
@@ -260,7 +265,7 @@ taxi_by_weekday$weekday <- factor(taxi_by_weekday$weekday, levels = c("Mon", "Tu
 
 ggplot()  +
   geom_point(data = taxi_by_weekday, aes(x = weekday, y = count/taxi_num_days), 
-             colour = taxi_color, size = 5, stroke = 1)+
+             colour = taxi_color, size = 5, stroke = 1) +
   geom_point(data = divvy_by_weekday, aes(x = weekday, y = count/divvy_num_days), 
              colour = divvy_color, size = 5, stroke = 1) +
   scale_y_continuous(labels = scales::comma) +
@@ -287,6 +292,7 @@ ggplot()  +
 
 ```
 
+The first interesting observation is that demand for divvy doesn't vary much throughout the week, even though one might expect weekends to have higher demand, especially in downtown areas. The second interesting observation is that demand for taxis keeps increasing between Monday - Thursday even though there isn't any significant different in activities/behaviors of individuals between those days. Some of the increase in demand for Friday can be attributed to Friday-Night outgoing behavior. While weekends see a decline, Sunday is much lower than Saturday, which is also surprising.
 
 
 
@@ -361,6 +367,7 @@ ggplot(snow_comparison) +
   
 ```
 
+Comparing within cold days, it can be seen that consumers are indifferent between the presence & absence of snow. As such, snow doesn't necessarily present a physical barrier that would make people want to take fewer buses or trains (on average).
 
 
 # PLOT 4: Bus Demand Variation - Month By Years
@@ -418,6 +425,10 @@ ggplot(p, aes(x = year, y = riders, group = month)) +
 
 ```
 
+The demand for buses has been falling between 2015 and 2017 as established earlier. However, further exploration reveals that this decline isn't driver by any particular set of months or seasonality, but by an overall decline across each month. 
+
+
+
 # PLOT 5: Hourly Variation in Divvy Demand by Gender
 
 ```{r, warning=FALSE, message=FALSE}
@@ -452,6 +463,9 @@ ggplot(data = divvy_by_gender) +
 
 #remove(divvy_by_gender)
 ```
+
+Demand for divvy bikes peaks at morning and evening rush hours. There is a noticably higher usage of divvy bikes by men compared to women at all hours of the day. It's also interesting to note that there are almost no women riding bikes between 1 am and 4 am.
+
 
 # PLOT 6: Taxi Heat Map
 ```{r, warning=FALSE, message=FALSE}
@@ -511,6 +525,9 @@ ggplot(data = taxi_by_hour, aes(x = weekday, y = hour,  fill = count/taxi_num_da
        y = "",
        caption = "Chicago Taxi Trips Data\n 2015-2017") 
 ```
+
+During weekdays, high demand is during the day, peaking during evening rush hour, with Friday evening rush hour being the busiest. However, unlike on weekdays, on weekdays, demand stays high at night, and extends to the early hours of the next day on Saturday and Sunday. 
+  
   
 ```{r}
 # Physical Manifestations of Seasonal Changes
@@ -584,12 +601,28 @@ lol_uneffected <-
   group_by(days_to_lolla) %>%
   summarise(riders = mean(rides)) 
 
+lol_uneffected = lol_uneffected[-1,]
+lol_uneffected <- lol_uneffected[-nrow(lol_uneffected),]
+
+ymin=c(-Inf,-Inf)
+ymax=c(Inf,Inf)
+
 ggplot() +
-  geom_rect(aes(xmin = 0, xmax = 4, ymin = 4000, ymax = 10000), colour = "white") +
+  geom_rect(aes(xmin = 0, xmax = 4, ymin = ymin, ymax = ymax), fill = "#824CD9", alpha = 0.3) +
   geom_line(data = lol_effected, aes(x = days_to_lolla, y = riders), colour = "pink") +
   geom_line(data = lol_uneffected, aes(x = days_to_lolla, y = riders), colour = "blue") +
   scale_y_continuous(labels = scales::comma) +
-  scale_x_continuous(breaks = c(-10:14))
+  scale_x_continuous(breaks = c(-10:14)) +
+  my_theme +
+  theme_bw()
+
+```
+
+
+
+```{r}
+
+taxi_2015_spatial <- read.csv (here::here("data", "2015_Taxi_Trips1.csv"))[,5:6]
 
 ```
 
