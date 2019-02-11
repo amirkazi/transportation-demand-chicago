@@ -23,7 +23,7 @@ knitr::opts_chunk$set(fig.width=10, fig.height=8, echo=FALSE, warning=FALSE, mes
 ```
 
 
-```{r, warning=FALSE, message=FALSE}
+```{r, warning=FALSE, message=FALSE, include=FALSE}
 # READING PUBLIC TRANSPORTATION DATA
 bus_trips <- read.csv (here::here("data", "bus_data.csv"))
 train_trips <- read.csv (here::here("data", "train_data.csv"))
@@ -60,6 +60,12 @@ public_transport = filter (public_transport, year(date) != 2018 )
 
 public_transport$dayofweek <- factor(public_transport$dayofweek, levels = c("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"))
 
+# DIVVY DEMAND GROUPED BY DAY
+divvy_trips$date <- mdy_hms(divvy_trips$START.TIME)
+
+divvy_trips$time_of_day <- hour(divvy_trips$date)
+divvy_trips$day_of_week <- wday(divvy_trips$date, label = TRUE)
+
 # SETTING WEATHER DATAFRAME
 weather$date <- ymd(weather$DATE)
 weather$dayofweek <- lubridate::wday(weather$DATE, label=TRUE)  
@@ -70,7 +76,7 @@ weather$dayofyear <- yday(weather$DATE)
 ```
 
 
-```{r, warning=FALSE, message=FALSE}
+```{r, warning=FALSE, message=FALSE, include=FALSE}
 # MY THEME
 
 my_theme <- 
@@ -98,9 +104,9 @@ divvy_male_color <- "#6baed6"
 ```
 
 
-# PLOT 1: Variation in demand between 2015 - 2017
 
-```{r, warning=FALSE, message=FALSE}
+
+```{r, warning=FALSE, message=FALSE, include=FALSE}
 # GETTING TAXI START TIMESTAMPS
 taxi_2015 <- read.csv (here::here("data", "2015_Taxi_Trips1.csv"))[,1]
 taxi_2016 <- read.csv (here::here("data", "2016_Taxi_Trips1.csv"))[,1]
@@ -112,17 +118,12 @@ taxi_start_times_date <- as.data.frame(date(taxi_start_times))
 colnames(taxi_start_times_date) <- c("date")
 remove(taxi_2015, taxi_2016, taxi_2017)
 
-
 # PUBLIC TRANSPORTATION DEMAND GROUPED BY DAY
 public_transport_by_day <-
   public_transport %>%
     group_by(date, trip_identity) %>%
     summarise(riders = sum(rides)) %>%
     select(date, riders, trip_identity)
-
-
-# DIVVY DEMAND GROUPED BY DAY
-divvy_trips$date <- mdy_hms(divvy_trips$START.TIME)
 
 divvy_by_day <-
   divvy_trips %>%
@@ -195,8 +196,8 @@ Between 2015 - 2017, there are two very clear trends:
 These patterns can impact the allocation and deployment of transportation services by the CTA across seasons. One possible explanation for the decline of demand for buses and taxis might be an increased reliance on ride-share services such as Uber, Lyft etc.
 
 
+<br><br>
 
-# PLOT 2A: Weekly distribution for Public Transport
 
 ```{r, warning=FALSE, message=FALSE}
 temp <- 
@@ -241,8 +242,7 @@ ggplot()  +
 
 For buses and trains, comparisons within a week indicate that highest usage is during weekdays, possibly due to work or school transits. Deployments of public transportation are also more spread out on weekends by the CTA to ensure more efficient use.
 
-# PLOT 2B: Weekly distribution for Taxis & Divvy
-
+<br><br>
 ```{r, warning=FALSE, message=FALSE}
 
 taxi_num_days <- n_distinct(date(taxi_start_times_date$date))
@@ -295,9 +295,7 @@ ggplot()  +
 The first interesting observation is that demand for divvy doesn't vary much throughout the week, even though one might expect weekends to have higher demand, especially in downtown areas. The second interesting observation is that demand for taxis keeps increasing between Monday - Thursday even though there isn't any significant different in activities/behaviors of individuals between those days. Some of the increase in demand for Friday can be attributed to Friday-Night outgoing behavior. While weekends see a decline, Sunday is much lower than Saturday, which is also surprising.
 
 
-
-# PLOT 3: Public Transport Demand Variation in Winter on snow days and non-snow days
-
+<br><br>
 ```{r, warning=FALSE, message=FALSE}
 
 winter_dates <- 
@@ -369,8 +367,8 @@ ggplot(snow_comparison) +
 
 Comparing within cold days, it can be seen that consumers are indifferent between the presence & absence of snow. As such, snow doesn't necessarily present a physical barrier that would make people want to take fewer buses or trains (on average).
 
+<br><br>
 
-# PLOT 4: Bus Demand Variation - Month By Years
 ```{r, warning=FALSE, message=FALSE}
 # reference: https://ibecav.github.io/slopegraph/
 
@@ -427,9 +425,7 @@ ggplot(p, aes(x = year, y = riders, group = month)) +
 
 The demand for buses has been falling between 2015 and 2017 as established earlier. However, further exploration reveals that this decline isn't driver by any particular set of months or seasonality, but by an overall decline across each month. 
 
-
-
-# PLOT 5: Hourly Variation in Divvy Demand by Gender
+<br><br>
 
 ```{r, warning=FALSE, message=FALSE}
 
@@ -467,17 +463,61 @@ ggplot(data = divvy_by_gender) +
 Demand for divvy bikes peaks at morning and evening rush hours. There is a noticably higher usage of divvy bikes by men compared to women at all hours of the day. It's also interesting to note that there are almost no women riding bikes between 1 am and 4 am.
 
 
-# PLOT 6: Taxi Heat Map
-```{r, warning=FALSE, message=FALSE}
-# GETTING TAXI START TIMESTAMPS
-#taxi_2015 <- read.csv (here::here("data", "2015_Taxi_Trips1.csv"))[,1]
-#taxi_2016 <- read.csv (here::here("data", "2016_Taxi_Trips1.csv"))[,1]
-#taxi_2017 <- read.csv (here::here("data", "2017_Taxi_Trips1.csv"))[,1]
+<br><br>
 
-#taxi_start_times <- mdy_hms(fct_c(taxi_2015, taxi_2016, taxi_2017))
+```{r, warning=FALSE, message=FALSE}
+
+divvy_by_duration <-
+divvy_trips %>%
+  group_by(day_of_week, time_of_day) %>%
+  summarize(duration = median(TRIP.DURATION)) 
+
+divvy_by_duration$day_of_week <- factor(divvy_by_duration$day_of_week, levels = c("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"))
+
+
+divvy_by_duration$time_of_day <- factor(divvy_by_duration$time_of_day, 
+                            levels = rev(c("0", "1","2", "3","4", "5","6", "7","8", "9","10", 
+                                           "11","12", "13","14", "15","16", 
+                                       "17","18", "19",
+                                       "20", "21","22", "23")))
+
+
+ggplot(data = divvy_by_duration, aes(x = day_of_week, y = time_of_day, fill = duration)) +
+geom_tile()+
+  scale_fill_gradient(low = "#bdd7e7", high = "#2171b5" ,
+                      name = "Median Trip\nDuration\n(In Seconds)", labels = comma) +
+  theme_bw() +
+  my_theme +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +  
+  theme(axis.title.x=element_blank(),
+        axis.title.y=element_blank(),
+        axis.ticks.y=element_blank(),
+        axis.ticks.x=element_blank(),
+        axis.text.y = element_text(vjust=-1.3),
+        axis.text.x = element_text(size = 8, face = "bold")) +
+  theme (legend.key = element_rect(fill = "black"),
+        legend.spacing.x = unit(0.2, 'cm'),
+        legend.text = element_text(family = "Courier", size = 8, face = "bold"),
+        legend.title = element_text(family = "Courier", size = 8, face = "bold"),
+        legend.background = element_rect(fill="white", size=1, linetype="solid",colour ="#969696")) +
+  scale_x_discrete (position = "top", expand = c(0,0)) +
+  scale_y_discrete(breaks = c(0,3,6,9,12,15,18,21),
+                   labels = c("Midnight","3 am","6 am","9 am", "Noon", "3 pm", "6 pm", "9 pm"))  +
+  labs (title ="Longest Divvy Trips Occur on Weekends.", 
+       subtitle = "Weekdays See Shorter Rides, Especially in Mornings & Evenings.",
+       x = "", 
+       y = "",
+       caption = "Chicago Divvy Data\n 2015-2017") 
+
+```
+
+Possibly due to increased tourist and visitor usage in Downtown/River area on weekends, the median trip duration is quite large compared to weekday median trip durations. Late night trips also seem to be of large durations, which may most likely be attributed to a very low number of riders in the first place, who may be interested in travelling for long durations at that time of day.
+
+
+<br><br>
+```{r, warning=FALSE, message=FALSE}
+
 taxi_start_times_solo <- as.data.frame(taxi_start_times)
-#colnames(taxi_start_times_date) <- c("date")
-#remove(taxi_2015, taxi_2016, taxi_2017)
 
 taxi_light <- "#ffffb2"
 taxi_dark <- "#cc4c02"
@@ -527,102 +567,7 @@ ggplot(data = taxi_by_hour, aes(x = weekday, y = hour,  fill = count/taxi_num_da
 ```
 
 During weekdays, high demand is during the day, peaking during evening rush hour, with Friday evening rush hour being the busiest. However, unlike on weekdays, on weekdays, demand stays high at night, and extends to the early hours of the next day on Saturday and Sunday. 
-  
-  
-```{r}
-# Physical Manifestations of Seasonal Changes
-# SNOW & PRECIPITATION LEVELS CHANGE
+<br><br>
 
-weather %>%
-  group_by(month) %>%
-  summarize(avg_prcp = mean(PRCP, na.rm = TRUE), avg_snow = mean(SNOW, na.rm = TRUE)) %>%
-  ggplot() +
-  geom_step(aes(x = month, y = avg_prcp, group = 1), colour = "cyan4") +
-  geom_step(aes(x = month, y = avg_snow, group = 1), colour = "indianred1") +
-  theme_bw() + 
-  annotate(geom="text", x=3.55, y=7, label="SNOW", color="indianred3", fontface =4) +
-  annotate(geom="text", x=7, y=4.9, label="PRECIPITATION", color="cyan4", fontface =4) +
-  labs(title ="Larger Seasonal Variation in Snow than in Precipitation in Chicago", 
-       subtitle = "Precipitation Slightly Higher During Summer ",
-       x = "", 
-       y = "Monthly Average (Inches)",
-       caption = "National Centers for\n Environmental Information 2015-2017") +
-  my_theme +
-  annotate("label", x=3.55, y=7,
-           label = 'SNOW', color = train_color, fontface =2,  family="Courier") +
-  annotate("label", x=7, y=4.9,
-           label = 'PRECIPITATION', color = train_color, fontface =2,  family="Courier") 
-
-```
-
-1 week before week of lol
-2 week == effect of week of lol
-1 week after effect of week of lol
-
-```{r}
-
-downtown_effected_buses <- c("3", "4", "12", "6", "10", "J14", "130", "146",
-                             "126", "147", "29", "62", "36", "151", "60", "22")
-#2015
-lol_2015 <-
-  bus_trips  %>%
-  filter(date >= "2015-07-20" & date <= "2015-08-16") %>%
-  select(route, date, rides) 
-lol_2015$days_to_lolla <- lol_2015$date - date("2015-07-31")
-
-#2016
-lol_2016 <-
-  bus_trips  %>%
-  filter(date >= "2016-07-18" & date <= "2016-08-14") %>%
-  select(route, date, rides) 
-lol_2016$days_to_lolla <- lol_2016$date - date("2016-07-28")
-
-#2017
-lol_2017 <-
-  bus_trips  %>%
-  filter(date >= "2017-07-24" & date <= "2017-08-20") %>%
-  select(route, date, rides) 
-lol_2017$days_to_lolla <- lol_2017$date - date("2017-08-03")
-
-lol_total <- rbind(lol_2015, lol_2016, lol_2017)
-
-lol_effected <- 
-  lol_total %>% 
-  filter(route %in% downtown_effected_buses)  %>%
-  group_by(days_to_lolla) %>%
-  summarise(riders = mean(rides))
-
-lol_effected = lol_effected[-1,]
-lol_effected <- lol_effected[-nrow(lol_effected),]
-
-lol_uneffected <- 
-  lol_total %>% 
-  filter(!(route %in% downtown_effected_buses)) %>%
-  group_by(days_to_lolla) %>%
-  summarise(riders = mean(rides)) 
-
-lol_uneffected = lol_uneffected[-1,]
-lol_uneffected <- lol_uneffected[-nrow(lol_uneffected),]
-
-ymin=c(-Inf,-Inf)
-ymax=c(Inf,Inf)
-
-ggplot() +
-  geom_rect(aes(xmin = 0, xmax = 4, ymin = ymin, ymax = ymax), fill = "#824CD9", alpha = 0.3) +
-  geom_line(data = lol_effected, aes(x = days_to_lolla, y = riders), colour = "pink") +
-  geom_line(data = lol_uneffected, aes(x = days_to_lolla, y = riders), colour = "blue") +
-  scale_y_continuous(labels = scales::comma) +
-  scale_x_continuous(breaks = c(-10:14)) +
-  my_theme +
-  theme_bw()
-
-```
-
-
-
-```{r}
-
-taxi_2015_spatial <- read.csv (here::here("data", "2015_Taxi_Trips1.csv"))[,5:6]
-
-```
-
+#### NEXT STEPS:
+Next steps involve creating maps & vizualizations that highlight flow of traffic & changes in demand patterns & routes.
