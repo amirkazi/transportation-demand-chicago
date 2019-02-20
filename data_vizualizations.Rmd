@@ -631,8 +631,11 @@ my_theme_maps <-
     axis.ticks.x=element_blank(),
     axis.title.y=element_blank(),
     axis.text.y=element_blank(),
-    axis.ticks.y=element_blank()
-    )
+    axis.ticks.y=element_blank(),
+    legend.text = element_text(family = "Courier", size = 8, face = "bold"),
+    legend.title = element_text(family = "Courier", size = 8, face = "bold"),
+    legend.background = element_rect(fill="white", size=1, linetype="solid",colour ="#969696"))
+
 ```
 
 
@@ -652,7 +655,7 @@ ggplot(data = taxi_starts) +
   my_theme_maps +
   theme(panel.grid.major=element_line(colour="transparent")) +
   scale_colour_gradient(low = "#E8E013", high = "#FF1570",
-                        name = "Median Trip Cost\n(From Location)", labels = comma) +
+                        name = "Median Trip Cost\n(In USD)", labels = comma) +
   annotate("segment", x = -87.91, xend = -87.92, y = 41.97, yend = 41.93, 
            color="orange", linetype="twodash") +
   annotate("text", x = -87.91, y = 41.92, label = "O'Hare \nAirport", 
@@ -667,11 +670,12 @@ ggplot(data = taxi_starts) +
          colour = "orange", face = "bold", size = 3, face = "bold", family="Courier" ) +
   #theme(legend.position = c(0.13,0.24))  +
   scale_size_continuous(name = 'Number of Rides \n(From Location)', labels = comma) +
-  labs (title ="Airports & South Side Trips Generate Highest Median Revenue for Taxi Drivers", 
+  labs (title ="Airports & South Side Pickups Generate Highest Median Revenue for Taxi Drivers", 
        subtitle = "But Most Taxi Traffic Is Concentrated in Downtown & North Side",
        x = "", 
        y = "",
-       caption = "Chicago Taxi Trips 2015 Data") 
+       caption = "Chicago Taxi Trips\n2015 Data") 
+
 
 
 ```
