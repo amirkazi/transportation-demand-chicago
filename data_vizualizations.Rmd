@@ -33,7 +33,11 @@ train_trips <- read.csv (here::here("data", "train_data.csv"))
 weather <- read.csv(here::here("data", "midway_weather.csv")) 
 
 # READING DIVVY DATA
-divvy_trips <- read.csv (here::here("data", "Divvy_Trips1.csv"))
+divvy_trips <- read.csv (here::here("data", "Divvy_Trips.csv"))
+### columns to drop from divvy
+### TRIP.ID, BIKE.ID, USER
+#divvy_trips <-select(divvy_trips, -c()) 
+#select (mydata,-c(mpg,cyl,wt))
 
 # CREATING PUBLIC TRANSPORTATION DATAFRAME
 train_trips$date <- ymd(train_trips$date)
@@ -232,7 +236,7 @@ ggplot()  +
   my_theme + 
   annotate("label", x = 5.5, y = 370, 
          label = 'TRAIN', color = train_color, fontface =2,  family="Courier") + 
-  annotate("label", x = 6.5, y = 510, 
+  annotate("label", x = 5.5, y = 510, 
          label = 'BUS', color = bus_color, fontface =2,  family="Courier") + 
   theme(legend.position="none",
         axis.title.y=element_blank(),
@@ -279,7 +283,7 @@ ggplot()  +
         plot.subtitle = element_text(size = 10, face = "bold"), 
         legend.title=element_blank(),
         legend.key = element_rect(fill = "white")) +
-  coord_flip() +
+  #coord_flip() +
   my_theme + 
   annotate("label", x = 5, y = 7700, 
          label = 'TAXI', color = taxi_color, fontface =2,  family="Courier") + 
@@ -571,3 +575,112 @@ During weekdays, high demand is during the day, peaking during evening rush hour
 
 #### NEXT STEPS:
 Next steps involve creating maps & vizualizations that highlight flow of traffic & changes in demand patterns & routes.
+
+
+
+```{r}
+
+taxi_2016 <- read.csv (here::here("data", "2016_Taxi_Trips1.csv"))
+taxi_2016 <-
+  taxi_2016 %>%
+  drop_na(Pickup.Centroid.Latitude, Pickup.Centroid.Longitude, Pickup.Centroid.Location,
+          Dropoff.Centroid.Latitude, Dropoff.Centroid.Longitude, Dropoff.Centroid..Location,
+          Trip.Total)
+```
+
+
+
+
+```{r}
+mini_taxi <- taxi_2016
+
+mini_taxi$Pickup.Centroid.Latitude = as.numeric(as.character(mini_taxi$Pickup.Centroid.Latitude))
+mini_taxi$Dropoff.Centroid.Latitude = as.numeric(as.character(mini_taxi$Dropoff.Centroid.Latitude))
+mini_taxi$Dropoff.Centroid.Longitude = as.numeric(mini_taxi$Dropoff.Centroid.Longitude)
+
+mini_taxi <- 
+  mini_taxi %>%
+  drop_na(Pickup.Centroid.Latitude)
+
+x <- 
+mini_taxi %>% 
+  mutate_if(is.numeric, round, digits=4)
+
+```
+
+
+
+```{r}
+
+y <-
+  x %>%
+    group_by(Pickup.Centroid.Longitude, Pickup.Centroid.Latitude) %>%
+    summarize(mean_cost = mean(Trip.Total), num_trips = n()) 
+
+
+ggplot(y, aes(x=Pickup.Centroid.Longitude, y=Pickup.Centroid.Latitude, size = mean_cost)) +
+  geom_point() 
+```
+
+
+
+
+
+
+
+
+
+```{r}
+
+divvy_trips <-
+  divvy_trips %>%
+  drop_na(FROM.LONGITUDE,FROM.LATITUDE)
+
+divvy_from_sf <- st_as_sf(divvy_trips, 
+                          coords=c("FROM.LONGITUDE","FROM.LATITUDE"), 
+                          crs=4326, 
+                          agr="constant")
+
+
+mini_divvy <- divvy_from_sf[1:500,]
+
+```
+
+
+
+```{r}
+
+
+ggplot() +
+  geom_sf(data = areas) +
+  geom_sf (data = water_wards, aes(fill = ))
+
+intersects <- st_intersects(areas, mini_divvy)
+water_wards <- st_join(mini_divvy, areas)
+
+table(intersects$id_polygons)
+
+areas <- st_read ("https://data.cityofchicago.org/resource/igwz-8jzy.geojson")
+areas <- st_transform (areas, 32616)
+
+
+mini_divvy <- st_transform (mini_divvy, 32616)
+
+
+st_crs(mini_divvy)
+
+x<- water_wards %>%
+  group_by(community) %>%
+  summarize (bike_starts = n()) 
+
+
+  ggplot() +    
+  geom_sf(data = areas) +
+  geom_sf(data = x, aes(fill = bike_starts))
+
+plot(areas)
+
+```
+
+
+
