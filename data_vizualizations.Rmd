@@ -191,7 +191,9 @@ total_demand_by_day %>%
   labs(title ="Demand for Public Transport & Divvy In Chicago Is Lowest In Winter", 
      subtitle = "Taxi Usage Less Elastic To Seasonal Changes",
      x = "", y = "Passengers Per Day (Thousands)",
-     caption = "CTA Ridership Data\n 2015-2017\n *Taxi Data till July 2017") 
+     caption = "CTA Ridership Data\n 2015-2017\n *Taxi Data till July 2017")  +
+  annotate("text", x = as.Date("2017-04-10"), y = 30, 
+         label = '*', fontface =2,  family="Courier") 
 ```
 
 Between 2015 - 2017, there are two very clear trends:
@@ -580,51 +582,36 @@ Next steps involve creating maps & vizualizations that highlight flow of traffic
 
 ```{r}
 
-taxi_2016 <- read.csv (here::here("data", "2016_Taxi_Trips1.csv"))
-taxi_2016 <-
-  taxi_2016 %>%
+taxi_2015 <- read.csv (here::here("data", "2015_Taxi_Trips1.csv"))
+taxi_2015 <-
+  taxi_2015 %>%
   drop_na(Pickup.Centroid.Latitude, Pickup.Centroid.Longitude, Pickup.Centroid.Location,
           Dropoff.Centroid.Latitude, Dropoff.Centroid.Longitude, Dropoff.Centroid..Location,
           Trip.Total)
-```
 
 
+taxi_2015$Pickup.Centroid.Latitude = as.numeric(as.character(taxi_2015$Pickup.Centroid.Latitude))
+taxi_2015$Dropoff.Centroid.Latitude = as.numeric(as.character(taxi_2015$Dropoff.Centroid.Latitude))
+taxi_2015$Dropoff.Centroid.Longitude = as.numeric(taxi_2015$Dropoff.Centroid.Longitude)
 
 
-```{r}
-mini_taxi <- taxi_2016
-
-mini_taxi$Pickup.Centroid.Latitude = as.numeric(as.character(mini_taxi$Pickup.Centroid.Latitude))
-mini_taxi$Dropoff.Centroid.Latitude = as.numeric(as.character(mini_taxi$Dropoff.Centroid.Latitude))
-mini_taxi$Dropoff.Centroid.Longitude = as.numeric(mini_taxi$Dropoff.Centroid.Longitude)
-
-mini_taxi <- 
-  mini_taxi %>%
+taxi_2015 <- 
+  taxi_2015 %>%
   drop_na(Pickup.Centroid.Latitude)
 
-x <- 
-mini_taxi %>% 
-  mutate_if(is.numeric, round, digits=4)
-
-```
+taxi_2015_approx <- 
+  taxi_2015 %>% 
+    mutate_if(is.numeric, round, digits=4)
 
 
-
-```{r}
-
-y <-
-  x %>%
+taxi_2015_grouped <-
+  taxi_2015_approx %>%
     group_by(Pickup.Centroid.Longitude, Pickup.Centroid.Latitude) %>%
     summarize(median_cost = median(Trip.Total), num_trips = n()) %>%
     filter (median_cost < 100, num_trips > 10)
 
-
-ggplot(y, aes(x=Pickup.Centroid.Longitude, y=Pickup.Centroid.Latitude, size = num_trips, colour = median_cost)) +
-  geom_point() +
-  scale_colour_gradientn(colours = terrain.colors(15)) +
-  theme_bw()  +
-  my_theme
 ```
+
 
 
 ```{r}
@@ -654,7 +641,7 @@ my_theme_maps <-
 ```{r}
 
 
-taxi_starts <- st_as_sf(y, coords=c("Pickup.Centroid.Longitude","Pickup.Centroid.Latitude"),
+taxi_starts <- st_as_sf(taxi_2015_grouped, coords=c("Pickup.Centroid.Longitude","Pickup.Centroid.Latitude"),
                         agr="constant", crs=4326)
 
 
@@ -684,7 +671,7 @@ ggplot(data = taxi_starts) +
        subtitle = "But Most Taxi Traffic Is Concentrated in Downtown & North Side",
        x = "", 
        y = "",
-       caption = "Chicago Taxi Trips 2016 Data") 
+       caption = "Chicago Taxi Trips 2015 Data") 
 
 
 ```
@@ -747,4 +734,74 @@ plot(areas)
 ```
 
 
+
+
+```{r}
+
+library(ggforce)
+
+ggplot(data = x[1:500,]) +
+  geom_link(aes(y = Pickup.Centroid.Latitude, x = Pickup.Centroid.Longitude, 
+                yend = Dropoff.Centroid.Latitude, xend = Dropoff.Centroid.Longitude, 
+                colour = Payment.Type))
+```
+
+
+```{r}
+
+mini <- x[1:10,]
+
+st_linestring(x = matrix((mini$Pickup.Centroid.Longitude, mini$Pickup.Centroid.Latitude,
+                                 mini$Dropoff.Centroid.Longitude, mini$Dropoff.Centroid.Latitude)
+                         , 0, 2), dim = "XY")
+
+
+multipoint_sfg <- st_multipoint(rbind(c(, 34.1168926), c(4.8979755, 52.3745403)))
+
+
+linestring_sfg <- st_linestring(rbind(c(mini$Pickup.Centroid.Longitude, mini$Pickup.Centroid.Latitude), c(mini$Dropoff.Centroid.Longitude, mini$Dropoff.Centroid.Latitude)))
+
+
+
+
+```
+
+
+
+
+
+```{r}
+mini_taxi <- taxi_2016
+
+mini_taxi$Pickup.Centroid.Latitude = as.numeric(as.character(mini_taxi$Pickup.Centroid.Latitude))
+mini_taxi$Dropoff.Centroid.Latitude = as.numeric(as.character(mini_taxi$Dropoff.Centroid.Latitude))
+mini_taxi$Dropoff.Centroid.Longitude = as.numeric(mini_taxi$Dropoff.Centroid.Longitude)
+
+mini_taxi <- 
+  mini_taxi %>%
+  drop_na(Pickup.Centroid.Latitude)
+
+x <- 
+mini_taxi %>% 
+  mutate_if(is.numeric, round, digits=4)
+
+```
+
+
+
+```{r}
+
+y <-
+  x %>%
+    group_by(Pickup.Centroid.Longitude, Pickup.Centroid.Latitude) %>%
+    summarize(median_cost = median(Trip.Total), num_trips = n()) %>%
+    filter (median_cost < 100, num_trips > 10)
+
+
+ggplot(y, aes(x=Pickup.Centroid.Longitude, y=Pickup.Centroid.Latitude, size = num_trips, colour = median_cost)) +
+  geom_point() +
+  scale_colour_gradientn(colours = terrain.colors(15)) +
+  theme_bw()  +
+  my_theme
+```
 
