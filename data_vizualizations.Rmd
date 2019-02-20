@@ -615,15 +615,79 @@ mini_taxi %>%
 y <-
   x %>%
     group_by(Pickup.Centroid.Longitude, Pickup.Centroid.Latitude) %>%
-    summarize(mean_cost = mean(Trip.Total), num_trips = n()) 
+    summarize(median_cost = median(Trip.Total), num_trips = n()) %>%
+    filter (median_cost < 100, num_trips > 10)
 
 
-ggplot(y, aes(x=Pickup.Centroid.Longitude, y=Pickup.Centroid.Latitude, size = mean_cost)) +
-  geom_point() 
+ggplot(y, aes(x=Pickup.Centroid.Longitude, y=Pickup.Centroid.Latitude, size = num_trips, colour = median_cost)) +
+  geom_point() +
+  scale_colour_gradientn(colours = terrain.colors(15)) +
+  theme_bw()  +
+  my_theme
+```
+
+
+```{r}
+my_theme_maps <- 
+  theme(
+    axis.text = element_text(size = 7, face = "bold", family="Courier"),
+    axis.title =  element_text(size = 10, face = "bold", family="Courier"),
+    plot.title = element_text(hjust = 0, size = 14, face = "bold", family="Courier"), 
+    plot.subtitle = element_text(size = 12, face = "bold", family="Courier"),
+    plot.caption = element_text(size = 8, face = "bold", family="Courier"),
+    legend.spacing.x = unit(0.2, 'cm'),
+    panel.border = element_rect(colour = "#969696", fill=NA, size=2),
+    panel.grid.major = element_blank(), 
+    panel.grid.minor = element_blank(),
+    axis.title.x=element_blank(),
+    axis.text.x=element_blank(),
+    axis.ticks.x=element_blank(),
+    axis.title.y=element_blank(),
+    axis.text.y=element_blank(),
+    axis.ticks.y=element_blank()
+    )
 ```
 
 
 
+
+```{r}
+
+
+taxi_starts <- st_as_sf(y, coords=c("Pickup.Centroid.Longitude","Pickup.Centroid.Latitude"),
+                        agr="constant", crs=4326)
+
+
+ggplot(data = taxi_starts) +
+  geom_sf(data = areas, colour = "white", fill = "black") +
+  geom_sf(aes(size = num_trips, colour = median_cost),  show.legend = 'point') +
+  theme_bw() +
+  my_theme_maps +
+  theme(panel.grid.major=element_line(colour="transparent")) +
+  scale_colour_gradient(low = "#E8E013", high = "#FF1570",
+                        name = "Median Trip Cost\n(From Location)", labels = comma) +
+  annotate("segment", x = -87.91, xend = -87.92, y = 41.97, yend = 41.93, 
+           color="orange", linetype="twodash") +
+  annotate("text", x = -87.91, y = 41.92, label = "O'Hare \nAirport", 
+         colour = "orange", face = "bold", size = 3, face = "bold", family="Courier" ) +
+  annotate("segment", x = -87.765, xend = -87.83, y = 41.785, yend = 41.82, 
+           color="orange", linetype="twodash") +
+  annotate("text", x = -87.83, y = 41.83, label = "Midway \nAirport", 
+         colour = "orange", face = "bold", size = 3, face = "bold", family="Courier" ) +
+  annotate("segment", x = -87.615, xend = -87.58, y = 41.895, yend = 41.93, 
+         color="orange", linetype="twodash") +
+  annotate("text", x = -87.57, y = 41.94, label = "Downtown \nChicago", 
+         colour = "orange", face = "bold", size = 3, face = "bold", family="Courier" ) +
+  #theme(legend.position = c(0.13,0.24))  +
+  scale_size_continuous(name = 'Number of Rides \n(From Location)', labels = comma) +
+  labs (title ="Airports & South Side Trips Generate Highest Median Revenue for Taxi Drivers", 
+       subtitle = "But Most Taxi Traffic Is Concentrated in Downtown & North Side",
+       x = "", 
+       y = "",
+       caption = "Chicago Taxi Trips 2016 Data") 
+
+
+```
 
 
 
