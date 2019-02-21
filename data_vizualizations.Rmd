@@ -108,19 +108,28 @@ divvy_male_color <- "#6baed6"
 ```
 
 
+```{r}
+taxi_2016_df <- as.data.frame(taxi_2016)
+taxi_2015_df <- as.data.frame(taxi_2015)
+
+```
+
 
 
 ```{r, warning=FALSE, message=FALSE, include=FALSE}
 # GETTING TAXI START TIMESTAMPS
 taxi_2015 <- read.csv (here::here("data", "2015_Taxi_Trips1.csv"))[,1]
-taxi_2016 <- read.csv (here::here("data", "2016_Taxi_Trips1.csv"))[,1]
-taxi_2017 <- read.csv (here::here("data", "2017_Taxi_Trips1.csv"))[,1]
+taxi_2016 <- read.csv (here::here("data", "2016_Taxi_Trips.csv"))[,3]
+taxi_2016_other <- read.csv (here::here("data", "2016_Taxi_Trips1.csv"))[,1]
+taxi_2017 <- read.csv (here::here("data", "2017_Taxi_Trips.csv"))[,3]
+taxi_2017_other <- read.csv (here::here("data", "2017_Taxi_Trips1.csv"))[,1]
 
-taxi_start_times <- mdy_hms(fct_c(taxi_2015, taxi_2016, taxi_2017))
+taxi_start_times <- mdy_hms(fct_c(taxi_2015, taxi_2017))
+#taxi_start_times <- mdy_hms(fct_c(taxi_2015, taxi_2016, taxi_2017))
 taxi_start_times_date <- as.data.frame(date(taxi_start_times))
 
 colnames(taxi_start_times_date) <- c("date")
-remove(taxi_2015, taxi_2016, taxi_2017)
+#remove(taxi_2015, taxi_2016, taxi_2017)
 
 # PUBLIC TRANSPORTATION DEMAND GROUPED BY DAY
 public_transport_by_day <-
@@ -147,7 +156,7 @@ taxi_by_day$trip_identity = 'taxi'
 
 # MERGED DATAFRAME OF TRANSPORTATION
 total_demand_by_day <- bind_rows(public_transport_by_day,divvy_by_day, taxi_by_day)
-remove(divvy_by_day, public_transport_by_day, taxi_by_day)
+#remove(divvy_by_day, public_transport_by_day, taxi_by_day)
 ```
 
 ```{r, warning=FALSE, message=FALSE}
