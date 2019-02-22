@@ -696,7 +696,6 @@ taxi_starts_distance <- st_as_sf(taxi_2015_grouped_distance,
                                  agr="constant", crs=4326)
 
 
-
 ggplot(data = taxi_starts_distance) +
   geom_sf(data = areas, colour = "white", fill = "black") +
   geom_sf(aes(size = num_trips, colour = median_trip_distance),  show.legend = 'point') +
@@ -738,16 +737,15 @@ areas <- st_transform (areas, 32616)
 
 
 trains <- st_read ("/Users/kazi/Desktop/transportation-demand-chicago/data/CTA_RailLines/CTA_RailLines.shp ")
-
-
 trains <- st_read(here::here("data/CTA_RailLines/", "CTA_RailLines.shp"))
 trains <- st_transform (trains, 32616)
 
 
-ggplot(data = taxi_starts_distance) +
-  geom_sf(data = areas, colour = "black", fill = "white") +
-  geom_sf(aes(size = num_trips),  show.legend = 'point') +
-  geom_sf(data = trains, aes(fill = LEGEND, colour = ))
+
+
+ggplot() +
+  geom_sf(data = areas, colour = "white", fill = "white") +
+  geom_sf(data = trains, colour = "red")
 ```
 
 
@@ -812,3 +810,150 @@ divvy_small <- st_transform (divvy_small, 32616)
 st_contains(divvy_small, areas)
 ```
 
+
+
+```{r}
+
+#1 week before week of lol
+#2 week == effect of week of lol
+#1 week after effect of week of lol
+
+
+downtown_effected_buses <- c("3", "4", "12", "6", "10", "J14", "130", "146",
+                             "126", "147", "29", "62", "36", "151", "60", "22")
+#2015
+lol_2015 <-
+  bus_trips  %>%
+  filter(date >= "2015-07-20" & date <= "2015-08-16") %>%
+  select(route, date, rides) 
+lol_2015$days_to_lolla <- lol_2015$date - date("2015-07-31")
+
+#2016
+lol_2016 <-
+  bus_trips  %>%
+  filter(date >= "2016-07-18" & date <= "2016-08-14") %>%
+  select(route, date, rides) 
+lol_2016$days_to_lolla <- lol_2016$date - date("2016-07-28")
+
+#2017
+lol_2017 <-
+  bus_trips  %>%
+  filter(date >= "2017-07-24" & date <= "2017-08-20") %>%
+  select(route, date, rides) 
+lol_2017$days_to_lolla <- lol_2017$date - date("2017-08-03")
+
+lol_total <- rbind(lol_2015, lol_2016, lol_2017)
+
+lol_effected <- 
+  lol_total %>% 
+  filter(route %in% downtown_effected_buses)  %>%
+  group_by(days_to_lolla) %>%
+  #summarise(riders = mean(rides))
+  summarise(riders = sum(rides))
+
+lol_effected = lol_effected[-1,]
+lol_effected <- lol_effected[-nrow(lol_effected),]
+
+lol_uneffected <- 
+  lol_total %>% 
+  filter(!(route %in% downtown_effected_buses)) %>%
+  group_by(days_to_lolla) %>%
+  #summarise(riders = mean(rides)) 
+  summarise(riders = sum(rides))
+
+lol_uneffected = lol_uneffected[-1,]
+lol_uneffected <- lol_uneffected[-nrow(lol_uneffected),]
+
+ymin=c(-Inf,-Inf)
+ymax=c(Inf,Inf)
+
+ggplot() +
+  geom_rect(aes(xmin = 0, xmax = 4, ymin = ymin, ymax = ymax), fill = "#824CD9", alpha = 0.3) +
+  geom_line(data = lol_effected, aes(x = days_to_lolla, y = riders/3), colour = "pink") +
+  geom_line(data = lol_uneffected, aes(x = days_to_lolla, y = riders/3), colour = "blue") +
+  scale_y_continuous(labels = scales::comma) +
+  scale_x_continuous(breaks = c(-10:14)) +
+  theme_bw() +
+  my_theme
+
+```
+
+
+
+
+
+
+
+
+```{r}
+
+#1 week before week of lol
+#2 week == effect of week of lol
+#1 week after effect of week of lol
+
+
+downtown_effected_buses <- c("3", "4", "12", "6", "10", "J14", "130", "146",
+                             "126", "147", "29", "62", "36", "151", "60", "22")
+#2015
+lol_2015 <-
+  bus_trips  %>%
+  filter(date >= "2015-07-20" & date <= "2015-08-16") %>%
+  select(route, date, rides) 
+lol_2015$days_to_lolla <- lol_2015$date - date("2015-07-31")
+
+#2016
+lol_2016 <-
+  bus_trips  %>%
+  filter(date >= "2016-07-18" & date <= "2016-08-14") %>%
+  select(route, date, rides) 
+lol_2016$days_to_lolla <- lol_2016$date - date("2016-07-28")
+
+#2017
+lol_2017 <-
+  bus_trips  %>%
+  filter(date >= "2017-07-24" & date <= "2017-08-20") %>%
+  select(route, date, rides) 
+lol_2017$days_to_lolla <- lol_2017$date - date("2017-08-03")
+
+lol_total <- rbind(lol_2015, lol_2016, lol_2017)
+
+lol_effected <- 
+  lol_total %>% 
+  filter(route %in% downtown_effected_buses)  %>%
+  group_by(days_to_lolla) %>%
+  summarise(riders = mean(rides))
+  #summarise(riders = sum(rides))
+
+lol_effected = lol_effected[-1,]
+lol_effected <- lol_effected[-nrow(lol_effected),]
+
+lol_uneffected <- 
+  lol_total %>% 
+  filter(!(route %in% downtown_effected_buses)) %>%
+  group_by(days_to_lolla) %>%
+  summarise(riders = mean(rides)) 
+  #summarise(riders = sum(rides))
+
+lol_uneffected = lol_uneffected[-1,]
+lol_uneffected <- lol_uneffected[-nrow(lol_uneffected),]
+
+ymin=c(-Inf,-Inf)
+ymax=c(Inf,Inf)
+
+ggplot() +
+  geom_rect(aes(xmin = 0, xmax = 4, ymin = ymin, ymax = ymax), fill = "#824CD9", alpha = 0.3) +
+  geom_line(data = lol_effected, aes(x = days_to_lolla, y = riders), colour = "pink", 
+              ) +
+  geom_smooth(data = lol_effected, aes(x = days_to_lolla, y = riders), colour = "pink", 
+            ) +
+  geom_smooth(data = lol_uneffected, aes(x = days_to_lolla, y = riders), colour = "blue",
+              se = FALSE, na.rm = TRUE) +
+  scale_y_continuous(labels = scales::comma) +
+  scale_x_continuous(breaks = c(-10:14)) +
+  my_theme +
+  theme_bw()
+
+geom_smooth(aes(color = trip_identity), se = FALSE, na.rm = TRUE
+
+
+```
