@@ -108,28 +108,18 @@ divvy_male_color <- "#6baed6"
 ```
 
 
-```{r}
-taxi_2016_df <- as.data.frame(taxi_2016)
-taxi_2015_df <- as.data.frame(taxi_2015)
-
-```
-
-
 
 ```{r, warning=FALSE, message=FALSE, include=FALSE}
 # GETTING TAXI START TIMESTAMPS
-taxi_2015 <- read.csv (here::here("data", "2015_Taxi_Trips1.csv"))[,1]
-taxi_2016 <- read.csv (here::here("data", "2016_Taxi_Trips.csv"))[,3]
-taxi_2016_other <- read.csv (here::here("data", "2016_Taxi_Trips1.csv"))[,1]
-taxi_2017 <- read.csv (here::here("data", "2017_Taxi_Trips.csv"))[,3]
-taxi_2017_other <- read.csv (here::here("data", "2017_Taxi_Trips1.csv"))[,1]
+taxi_2015 <- read.csv (here::here("data", "2015_Taxi_Times.csv"))[,1]
+taxi_2016 <- read.csv (here::here("data", "2016_Taxi_Times.csv"))[,1]
+taxi_2017 <- read.csv (here::here("data", "2017_Taxi_Times.csv"))[,1]
 
-taxi_start_times <- mdy_hms(fct_c(taxi_2015, taxi_2017))
-#taxi_start_times <- mdy_hms(fct_c(taxi_2015, taxi_2016, taxi_2017))
+taxi_start_times <- mdy_hms(fct_c(taxi_2015, taxi_2016, taxi_2017))
 taxi_start_times_date <- as.data.frame(date(taxi_start_times))
 
 colnames(taxi_start_times_date) <- c("date")
-#remove(taxi_2015, taxi_2016, taxi_2017)
+remove(taxi_2015, taxi_2016, taxi_2017)
 
 # PUBLIC TRANSPORTATION DEMAND GROUPED BY DAY
 public_transport_by_day <-
@@ -156,7 +146,7 @@ taxi_by_day$trip_identity = 'taxi'
 
 # MERGED DATAFRAME OF TRANSPORTATION
 total_demand_by_day <- bind_rows(public_transport_by_day,divvy_by_day, taxi_by_day)
-#remove(divvy_by_day, public_transport_by_day, taxi_by_day)
+remove(divvy_by_day, public_transport_by_day, taxi_by_day)
 ```
 
 ```{r, warning=FALSE, message=FALSE}
@@ -201,7 +191,7 @@ total_demand_by_day %>%
      subtitle = "Taxi Usage Less Elastic To Seasonal Changes",
      x = "", y = "Passengers Per Day (Thousands)",
      caption = "CTA Ridership Data\n 2015-2017\n *Taxi Data till July 2017")  +
-  annotate("text", x = as.Date("2017-04-10"), y = 30, 
+  annotate("text", x = as.Date("2017-08-10"), y = 30, 
          label = '*', fontface =2,  family="Courier") 
 ```
 
@@ -606,15 +596,12 @@ taxi_2015$Dropoff.Centroid.Longitude = as.numeric(taxi_2015$Dropoff.Centroid.Lon
 
 taxi_2015 <- 
   taxi_2015 %>%
-  drop_na(Pickup.Centroid.Latitude)
-
-taxi_2015_approx <- 
-  taxi_2015 %>% 
-    mutate_if(is.numeric, round, digits=4)
+  drop_na(Pickup.Centroid.Latitude) %>%
+  mutate_if(is.numeric, round, digits=4)
 
 
 taxi_2015_grouped <-
-  taxi_2015_approx %>%
+  taxi_2015 %>%
     group_by(Pickup.Centroid.Longitude, Pickup.Centroid.Latitude) %>%
     summarize(median_cost = median(Trip.Total), num_trips = n()) %>%
     filter (median_cost < 100, num_trips > 10)
@@ -656,6 +643,9 @@ my_theme_maps <-
 taxi_starts <- st_as_sf(taxi_2015_grouped, coords=c("Pickup.Centroid.Longitude","Pickup.Centroid.Latitude"),
                         agr="constant", crs=4326)
 
+areas <- st_read ("https://data.cityofchicago.org/resource/igwz-8jzy.geojson")
+areas <- st_transform (areas, 32616)
+
 
 ggplot(data = taxi_starts) +
   geom_sf(data = areas, colour = "white", fill = "black") +
@@ -693,6 +683,74 @@ ggplot(data = taxi_starts) +
 
 
 
+```{r}
+
+taxi_2015_grouped_distance <-
+  taxi_2015 %>%
+    group_by(Pickup.Centroid.Longitude, Pickup.Centroid.Latitude) %>%
+    summarize(median_trip_distance = median(Trip.Miles), num_trips = n()) %>%
+    filter (median_trip_distance > 0.06, num_trips > 10)
+
+taxi_starts_distance <- st_as_sf(taxi_2015_grouped_distance,
+                                 coords=c("Pickup.Centroid.Longitude","Pickup.Centroid.Latitude"),
+                                 agr="constant", crs=4326)
+
+
+
+ggplot(data = taxi_starts_distance) +
+  geom_sf(data = areas, colour = "white", fill = "black") +
+  geom_sf(aes(size = num_trips, colour = median_trip_distance),  show.legend = 'point') +
+  theme_bw() +
+  my_theme_maps +
+  theme(panel.grid.major=element_line(colour="transparent")) +
+  scale_colour_gradient(low = "#E8E013", high = "#FF1570",
+                        name = "Median Trip \nDistance\n(In Miles)", labels = comma) +
+  annotate("segment", x = -87.91, xend = -87.92, y = 41.97, yend = 41.93, 
+           color="orange", linetype="twodash") +
+  annotate("text", x = -87.91, y = 41.92, label = "O'Hare \nAirport", 
+         colour = "orange", face = "bold", size = 3, face = "bold", family="Courier" ) +
+  annotate("segment", x = -87.765, xend = -87.83, y = 41.785, yend = 41.82, 
+           color="orange", linetype="twodash") +
+  annotate("text", x = -87.83, y = 41.83, label = "Midway \nAirport", 
+         colour = "orange", face = "bold", size = 3, face = "bold", family="Courier" ) +
+  annotate("segment", x = -87.615, xend = -87.58, y = 41.895, yend = 41.93, 
+         color="orange", linetype="twodash") +
+  annotate("text", x = -87.57, y = 41.94, label = "Downtown \nChicago", 
+         colour = "orange", face = "bold", size = 3, face = "bold", family="Courier" ) +
+  #theme(legend.position = c(0.13,0.24))  +
+  scale_size_continuous(name = 'Number of Rides \n(From Location)', labels = comma) +
+  labs (subtitle ="Downtown has Shortest Rides", 
+       title = "Excluding Airports, Highest Number of Long Distance Taxi Rides Are From Hyde Park. ",
+       x = "", 
+       y = "",
+       caption = "Chicago Taxi Trips\n2015 Data") 
+
+```
+
+#### OKAY NEXT
+
+
+
+```{r}
+
+areas <- st_read ("https://data.cityofchicago.org/resource/igwz-8jzy.geojson")
+areas <- st_transform (areas, 32616)
+
+
+trains <- st_read ("/Users/kazi/Desktop/transportation-demand-chicago/data/CTA_RailLines/CTA_RailLines.shp ")
+
+
+trains <- st_read(here::here("data/CTA_RailLines/", "CTA_RailLines.shp"))
+trains <- st_transform (trains, 32616)
+
+
+ggplot(data = taxi_starts_distance) +
+  geom_sf(data = areas, colour = "black", fill = "white") +
+  geom_sf(aes(size = num_trips),  show.legend = 'point') +
+  geom_sf(data = trains, aes(fill = LEGEND, colour = ))
+```
+
+
 
 ```{r}
 
@@ -705,14 +763,6 @@ divvy_from_sf <- st_as_sf(divvy_trips,
                           crs=4326, 
                           agr="constant")
 
-
-mini_divvy <- divvy_from_sf[1:500,]
-
-```
-
-
-
-```{r}
 
 
 ggplot() +
@@ -730,13 +780,11 @@ areas <- st_transform (areas, 32616)
 
 mini_divvy <- st_transform (mini_divvy, 32616)
 
-
 st_crs(mini_divvy)
 
 x<- water_wards %>%
   group_by(community) %>%
   summarize (bike_starts = n()) 
-
 
   ggplot() +    
   geom_sf(data = areas) +
@@ -749,72 +797,18 @@ plot(areas)
 
 
 
-```{r}
-
-library(ggforce)
-
-ggplot(data = x[1:500,]) +
-  geom_link(aes(y = Pickup.Centroid.Latitude, x = Pickup.Centroid.Longitude, 
-                yend = Dropoff.Centroid.Latitude, xend = Dropoff.Centroid.Longitude, 
-                colour = Payment.Type))
-```
 
 
 ```{r}
 
-mini <- x[1:10,]
+divvy_trips <-
+  divvy_trips %>%
+  drop_na(FROM.LONGITUDE,FROM.LATITUDE)
 
-st_linestring(x = matrix((mini$Pickup.Centroid.Longitude, mini$Pickup.Centroid.Latitude,
-                                 mini$Dropoff.Centroid.Longitude, mini$Dropoff.Centroid.Latitude)
-                         , 0, 2), dim = "XY")
+divvy_small <- st_as_sf(divvy_trips, coords=c("FROM.LONGITUDE","FROM.LATITUDE"),
+                        agr="constant", crs=4326)
 
-
-multipoint_sfg <- st_multipoint(rbind(c(, 34.1168926), c(4.8979755, 52.3745403)))
-
-
-linestring_sfg <- st_linestring(rbind(c(mini$Pickup.Centroid.Longitude, mini$Pickup.Centroid.Latitude), c(mini$Dropoff.Centroid.Longitude, mini$Dropoff.Centroid.Latitude)))
-
-
-
-
-```
-
-
-
-
-
-```{r}
-mini_taxi <- taxi_2016
-
-mini_taxi$Pickup.Centroid.Latitude = as.numeric(as.character(mini_taxi$Pickup.Centroid.Latitude))
-mini_taxi$Dropoff.Centroid.Latitude = as.numeric(as.character(mini_taxi$Dropoff.Centroid.Latitude))
-mini_taxi$Dropoff.Centroid.Longitude = as.numeric(mini_taxi$Dropoff.Centroid.Longitude)
-
-mini_taxi <- 
-  mini_taxi %>%
-  drop_na(Pickup.Centroid.Latitude)
-
-x <- 
-mini_taxi %>% 
-  mutate_if(is.numeric, round, digits=4)
-
-```
-
-
-
-```{r}
-
-y <-
-  x %>%
-    group_by(Pickup.Centroid.Longitude, Pickup.Centroid.Latitude) %>%
-    summarize(median_cost = median(Trip.Total), num_trips = n()) %>%
-    filter (median_cost < 100, num_trips > 10)
-
-
-ggplot(y, aes(x=Pickup.Centroid.Longitude, y=Pickup.Centroid.Latitude, size = num_trips, colour = median_cost)) +
-  geom_point() +
-  scale_colour_gradientn(colours = terrain.colors(15)) +
-  theme_bw()  +
-  my_theme
+divvy_small <- st_transform (divvy_small, 32616)
+st_contains(divvy_small, areas)
 ```
 
