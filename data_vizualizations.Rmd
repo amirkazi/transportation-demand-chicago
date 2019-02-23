@@ -15,6 +15,8 @@ library(ggrepel)
 library(gtools)
 library(forcats)
 library(sf)
+library(png)
+library(grid)
 library(lubridate)  # lubridate masks object 'here' from package 'here'.
 ```
 
@@ -867,93 +869,52 @@ lol_uneffected <- lol_uneffected[-nrow(lol_uneffected),]
 ymin=c(-Inf,-Inf)
 ymax=c(Inf,Inf)
 
+bus_downtown <- "#66c2a4"
+bus_other <- "#2ca25f"
+lolla_color <- "#f03b20"
+
+
+img <- readPNG(here::here("lolla_image.png"))
+g <- rasterGrob(img, interpolate=TRUE)
+
 ggplot() +
-  geom_rect(aes(xmin = 0, xmax = 4, ymin = ymin, ymax = ymax), fill = "#824CD9", alpha = 0.3) +
-  geom_line(data = lol_effected, aes(x = days_to_lolla, y = riders/3), colour = "pink") +
-  geom_line(data = lol_uneffected, aes(x = days_to_lolla, y = riders/3), colour = "blue") +
+  stat_smooth(data = lol_effected, aes(x = days_to_lolla, y = riders/(3*1000)), 
+              colour = bus_downtown, method = "lm",
+              formula = y ~ poly(x, 15), se = FALSE)  +
+  stat_smooth(data = lol_uneffected, aes(x = days_to_lolla, y = riders/(3*1000)), 
+              colour = bus_other, method = "lm",
+              formula = y ~ poly(x, 15), se = FALSE)  +
   scale_y_continuous(labels = scales::comma) +
-  scale_x_continuous(breaks = c(-10:14)) +
+  scale_x_continuous(breaks = c(-14:20)) +
   theme_bw() +
-  my_theme
-
-```
-
-
-
-
-
-
-
-
-```{r}
-
-#1 week before week of lol
-#2 week == effect of week of lol
-#1 week after effect of week of lol
-
-
-downtown_effected_buses <- c("3", "4", "12", "6", "10", "J14", "130", "146",
-                             "126", "147", "29", "62", "36", "151", "60", "22")
-#2015
-lol_2015 <-
-  bus_trips  %>%
-  filter(date >= "2015-07-20" & date <= "2015-08-16") %>%
-  select(route, date, rides) 
-lol_2015$days_to_lolla <- lol_2015$date - date("2015-07-31")
-
-#2016
-lol_2016 <-
-  bus_trips  %>%
-  filter(date >= "2016-07-18" & date <= "2016-08-14") %>%
-  select(route, date, rides) 
-lol_2016$days_to_lolla <- lol_2016$date - date("2016-07-28")
-
-#2017
-lol_2017 <-
-  bus_trips  %>%
-  filter(date >= "2017-07-24" & date <= "2017-08-20") %>%
-  select(route, date, rides) 
-lol_2017$days_to_lolla <- lol_2017$date - date("2017-08-03")
-
-lol_total <- rbind(lol_2015, lol_2016, lol_2017)
-
-lol_effected <- 
-  lol_total %>% 
-  filter(route %in% downtown_effected_buses)  %>%
-  group_by(days_to_lolla) %>%
-  summarise(riders = mean(rides))
-  #summarise(riders = sum(rides))
-
-lol_effected = lol_effected[-1,]
-lol_effected <- lol_effected[-nrow(lol_effected),]
-
-lol_uneffected <- 
-  lol_total %>% 
-  filter(!(route %in% downtown_effected_buses)) %>%
-  group_by(days_to_lolla) %>%
-  summarise(riders = mean(rides)) 
-  #summarise(riders = sum(rides))
-
-lol_uneffected = lol_uneffected[-1,]
-lol_uneffected <- lol_uneffected[-nrow(lol_uneffected),]
-
-ymin=c(-Inf,-Inf)
-ymax=c(Inf,Inf)
-
-ggplot() +
-  geom_rect(aes(xmin = 0, xmax = 4, ymin = ymin, ymax = ymax), fill = "#824CD9", alpha = 0.3) +
-  geom_line(data = lol_effected, aes(x = days_to_lolla, y = riders), colour = "pink", 
-              ) +
-  geom_smooth(data = lol_effected, aes(x = days_to_lolla, y = riders), colour = "pink", 
-            ) +
-  geom_smooth(data = lol_uneffected, aes(x = days_to_lolla, y = riders), colour = "blue",
-              se = FALSE, na.rm = TRUE) +
-  scale_y_continuous(labels = scales::comma) +
-  scale_x_continuous(breaks = c(-10:14)) +
   my_theme +
-  theme_bw()
-
-geom_smooth(aes(color = trip_identity), se = FALSE, na.rm = TRUE
-
-
+  annotation_custom(g, xmin=0, xmax=4, ymin=700, ymax=800) +
+  scale_x_continuous(breaks = c(-10,-3,0,4,11, 14),
+                   labels = c("10 days To\nLollapalooza","Road\nBlocks\nStart", 
+                              "Start Of\nLollapalooza\n", 
+                              "End of\nLollapalooza", "Road\nBlocks\nEnd",
+                              "10 Days After\nEnd Of\nLollapalooza")) +
+  theme(axis.title.x=element_blank()) +
+  annotate("label", x = 13, y = 680, 
+           label = 'Route-Unaffected\nBuses', color = bus_other, 
+           fontface =2,  family="Courier") +
+  annotate("label", x = 12, y = 220, 
+           label = 'Route-Affected Buses', color = bus_downtown, 
+           fontface =2,  family="Courier")   + 
+  annotate("text", x = 1, y = 320, label = "Higher Trough\nThan Usual", 
+         colour = lolla_color, face = "bold", size = 2.5, face = "bold", family="Courier" ) +
+  annotate("segment", xend = 2, x = 1, yend = 400, y = 350, 
+         color=lolla_color,
+         arrow = arrow(length = unit(0.35, "cm")))  +
+  labs(title ="Regular Users Switch to Route-Unaffected Buses During Lollapalooza.", 
+       subtitle = "Users Revert to Regular Demand Patterns After Road Closures Removed.",
+       x = "", y = "Bus Users (Thousands)",
+       caption = "CTA Bus Data\n 2015-2017") 
+  
 ```
+
+
+
+
+
+
