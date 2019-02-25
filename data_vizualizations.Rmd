@@ -1,11 +1,16 @@
 ---
-title: "Trends & Variations in Transportation Demand in Chicago"
+title: "Transportation in Chicago"
 author: "Amir Kazi"
-date: "February 2019"
 output:
   html_document: 
     code_folding: hide
+    toc: true
+    toc_float: true
+    theme: united
 ---
+
+&nbsp;
+&nbsp;
 
 ```{r setup, include=FALSE}
 library (tidyverse)
@@ -21,7 +26,7 @@ library(lubridate)  # lubridate masks object 'here' from package 'here'.
 ```
 
 ```{r global_options, include=FALSE}
-knitr::opts_chunk$set(fig.width=10, fig.height=8, echo=FALSE, warning=FALSE, message=FALSE)
+knitr::opts_chunk$set(fig.width=14, fig.height=10, warning=FALSE, message=FALSE)
 ```
 
 
@@ -87,11 +92,11 @@ weather$dayofyear <- yday(weather$DATE)
 
 my_theme <- 
   theme(
-    axis.text = element_text(size = 7, face = "bold", family="Courier"),
-    axis.title =  element_text(size = 10, face = "bold", family="Courier"),
-    plot.title = element_text(hjust = 0, size = 14, face = "bold", family="Courier"), 
-    plot.subtitle = element_text(size = 12, face = "bold", family="Courier"),
-    plot.caption = element_text(size = 8, face = "bold", family="Courier"),
+    axis.text = element_text(size = 15, face = "bold", family="Courier"),
+    axis.title =  element_text(size = 15, face = "bold", family="Courier"),
+    plot.title = element_text(hjust = 0, size = 24, face = "bold", family="Courier"), 
+    plot.subtitle = element_text(size = 20, face = "bold", family="Courier"),
+    plot.caption = element_text(size = 15, face = "bold", family="Courier"),
     legend.title=element_blank(),
     legend.spacing.x = unit(0.2, 'cm'),
     panel.border = element_rect(colour = "#969696", fill=NA, size=2),
@@ -109,6 +114,31 @@ divvy_female_color <- "#2171b5"
 divvy_male_color <- "#6baed6"
 ```
 
+
+
+```{r, warning=FALSE, message=FALSE, include=FALSE}
+my_theme_maps <- 
+  theme(
+    axis.text = element_text(size = 15, face = "bold", family="Courier"),
+    axis.title =  element_text(size = 15, face = "bold", family="Courier"),
+    plot.title = element_text(hjust = 0, size = 24, face = "bold", family="Courier"), 
+    plot.subtitle = element_text(size = 20, face = "bold", family="Courier"),
+    plot.caption = element_text(size = 15, face = "bold", family="Courier"),
+    legend.spacing.x = unit(0.2, 'cm'),
+    panel.border = element_rect(colour = "#969696", fill=NA, size=2),
+    panel.grid.major = element_blank(), 
+    panel.grid.minor = element_blank(),
+    axis.title.x=element_blank(),
+    axis.text.x=element_blank(),
+    axis.ticks.x=element_blank(),
+    axis.title.y=element_blank(),
+    axis.text.y=element_blank(),
+    axis.ticks.y=element_blank(),
+    legend.text = element_text(family = "Courier", size = 8, face = "bold"),
+    legend.title = element_text(family = "Courier", size = 8, face = "bold"),
+    legend.background = element_rect(fill="white", size=1, linetype="solid",colour ="#969696"))
+
+```
 
 
 ```{r, warning=FALSE, message=FALSE, include=FALSE}
@@ -151,6 +181,9 @@ total_demand_by_day <- bind_rows(public_transport_by_day,divvy_by_day, taxi_by_d
 remove(divvy_by_day, public_transport_by_day, taxi_by_day)
 ```
 
+## DEMAND OVERVIEW
+&nbsp;
+&nbsp;
 ```{r, warning=FALSE, message=FALSE}
 # PLOTTING GRAPH of 3 Year Chicago Public Transportation Trend + Weather
 
@@ -180,15 +213,15 @@ total_demand_by_day %>%
   geom_vline(xintercept = as.Date(c("2015-01-01", "2016-01-01", "2017-01-01", "2018-01-01")), 
              linetype = 4)  +
   annotate("label", x = as.Date("2015-06-01"), y = 500, 
-           label = 'TRAIN', color = train_color, fontface =2,  family="Courier")  +
+           label = 'TRAIN', color = train_color, fontface =2,  family="Courier", size = 10)  +
   annotate("label", x = as.Date("2016-06-01"), y = 670, 
-           label = 'BUS', color = bus_color, fontface =2,  family="Courier") +
+           label = 'BUS', color = bus_color, fontface =2,  family="Courier", size = 10) +
   annotate("label", x = as.Date("2016-06-01"), y = 100, 
-           label = 'TAXI', color = taxi_color, fontface =2,  family="Courier") +
+           label = 'TAXI', color = taxi_color, fontface =2,  family="Courier", size = 10) +
   annotate("label", x = as.Date("2015-05-01"), y = 40, 
-           label = 'DIVVY', color = divvy_color, fontface =2,  family="Courier")  +
+           label = 'DIVVY', color = divvy_color, fontface =2,  family="Courier", size = 10)  +
   annotate("label", x = as.Date("2016-03-21"), y = 320, 
-           label = 'WINTER', color = winter_color, fontface =2,  family="Courier") +
+           label = 'WINTER', color = winter_color, fontface =2,  family="Courier", size = 10) +
   labs(title ="Demand for Public Transport & Divvy In Chicago Is Lowest In Winter", 
      subtitle = "Taxi Usage Less Elastic To Seasonal Changes",
      x = "", y = "Passengers Per Day (Thousands)",
@@ -202,10 +235,14 @@ Between 2015 - 2017, there are two very clear trends:
 2) Demand for Buses & Taxis has decreased throughout this time period. There also doesn't seem to be a seasonal component accompanying this decline.
 These patterns can impact the allocation and deployment of transportation services by the CTA across seasons. One possible explanation for the decline of demand for buses and taxis might be an increased reliance on ride-share services such as Uber, Lyft etc.
 
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
 
-<br><br>
-
-
+## REGULAR PATTERNS
+&nbsp;
+&nbsp;
 ```{r, warning=FALSE, message=FALSE}
 temp <- 
   public_transport %>%
@@ -238,18 +275,19 @@ ggplot()  +
   coord_flip() +
   my_theme + 
   annotate("label", x = 5.5, y = 370, 
-         label = 'TRAIN', color = train_color, fontface =2,  family="Courier") + 
+         label = 'TRAIN', color = train_color, fontface =2,  family="Courier", size = 15) + 
   annotate("label", x = 5.5, y = 510, 
-         label = 'BUS', color = bus_color, fontface =2,  family="Courier") + 
+         label = 'BUS', color = bus_color, fontface =2,  family="Courier", size = 15) + 
   theme(legend.position="none",
         axis.title.y=element_blank(),
         axis.ticks.y=element_blank()
         )
 ```
 
-For buses and trains, comparisons within a week indicate that highest usage is during weekdays, possibly due to work or school transits. Deployments of public transportation are also more spread out on weekends by the CTA to ensure more efficient use.
+For buses and trains, comparisons within a week indicate that highest usage is during weekdays, possibly due to work or school transits. Deployments of public transportation are also more spread out on weekends by the CTA to ensure more efficient use. 
 
-<br><br>
+&nbsp;
+&nbsp;
 ```{r, warning=FALSE, message=FALSE}
 
 taxi_num_days <- n_distinct(date(taxi_start_times_date$date))
@@ -280,7 +318,7 @@ ggplot()  +
   labs(title ="Taxi Demand Peaks Throughout Week, Then Falls On Weekend", 
        subtitle = "Divvy Bike Demand Remains Constant",
        x = "Day of Week", y = "Average Daily Trips",
-       caption = "Chicago Taxi & Divvy \n Ridership Data 2015-2017") +
+       caption = "Chicago Taxi & Divvy\n Ridership Data 2015-2017") +
   theme_bw()  + 
   theme(plot.title = element_text(hjust = -0, size = 12, face = "bold"), 
         plot.subtitle = element_text(size = 10, face = "bold"), 
@@ -288,9 +326,9 @@ ggplot()  +
         legend.key = element_rect(fill = "white")) +
   #coord_flip() +
   my_theme + 
-  annotate("label", x = 5, y = 7700, 
+  annotate("label", x = 3.5, y = 6800, size = 15,
          label = 'TAXI', color = taxi_color, fontface =2,  family="Courier") + 
-  annotate("label", x = 5, y = 2210, 
+  annotate("label", x = 3, y = 2710, size = 15, 
          label = 'DIVVY', color = divvy_color, fontface =2,  family="Courier") + 
   theme(legend.position="none",
         axis.title.y=element_blank(),
@@ -301,8 +339,227 @@ ggplot()  +
 
 The first interesting observation is that demand for divvy doesn't vary much throughout the week, even though one might expect weekends to have higher demand, especially in downtown areas. The second interesting observation is that demand for taxis keeps increasing between Monday - Thursday even though there isn't any significant different in activities/behaviors of individuals between those days. Some of the increase in demand for Friday can be attributed to Friday-Night outgoing behavior. While weekends see a decline, Sunday is much lower than Saturday, which is also surprising.
 
+&nbsp;
+&nbsp;
 
-<br><br>
+
+```{r, warning=FALSE, message=FALSE}
+
+taxi_start_times_solo <- as.data.frame(taxi_start_times)
+
+taxi_light <- "#ffffb2"
+taxi_dark <- "#cc4c02"
+
+taxi_start_times_solo$hour <- hour(taxi_start_times_solo$taxi_start_times)
+taxi_start_times_solo$weekday <- lubridate::wday(taxi_start_times_solo$taxi_start_times, label = TRUE)
+
+taxi_by_hour <-
+  taxi_start_times_solo %>%
+  group_by(weekday, hour) %>%
+  summarize(count = n())
+
+taxi_by_hour$weekday <- factor(taxi_by_hour$weekday, levels = c("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"))
+taxi_by_hour$hour <- as.factor (taxi_by_hour$hour)
+taxi_by_hour$hour <- factor(taxi_by_hour$hour, 
+                            levels = rev(c("0", "1","2", "3","4", "5","6", "7","8", "9","10", 
+                                           "11","12", "13","14", "15","16", 
+                                       "17","18", "19",
+                                       "20", "21","22", "23")))
+
+
+ggplot(data = taxi_by_hour, aes(x = weekday, y = hour,  fill = count/taxi_num_days)) +
+  geom_tile() +
+  scale_fill_gradient(low = taxi_light, high = taxi_dark,name = "Taxi Trips", labels = comma) +
+  theme_bw() +
+  my_theme + 
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +  
+  theme(axis.title.x=element_blank(),
+        axis.title.y=element_blank(),
+        axis.ticks.y=element_blank(),
+        axis.ticks.x=element_blank(),
+        axis.text.y = element_text(vjust=-1.3),
+        axis.text.x = element_text(size = 15, face = "bold")) +
+  theme (legend.key = element_rect(fill = "black"),
+        legend.spacing.x = unit(0.2, 'cm'),
+        legend.text = element_text(family = "Courier", size = 8, face = "bold"),
+        legend.title = element_text(family = "Courier", size = 8, face = "bold"),
+        legend.background = element_rect(fill="white", size=1, linetype="solid",colour ="#969696")) +
+  scale_x_discrete (position = "top", expand = c(0,0)) +
+  scale_y_discrete(breaks = c(0,3,6,9,12,15,18,21),
+                   labels = c("Midnight","3 am","6 am","9 am", "Noon", "3 pm", "6 pm", "9 pm"))  +
+  labs (title ="Highest Weekday Taxi Traffic Between 6-8 pm, Later on Weekends", 
+       subtitle = "Weekend Rush Drives Taxis Late Into The Night",
+       x = "", 
+       y = "",
+       caption = "Chicago Taxi Trips Data\n 2015-2017") 
+```
+
+
+During weekdays, high demand is during the day, peaking during evening rush hour, with Friday evening rush hour being the busiest. However, unlike on weekdays, on weekdays, demand stays high at night, and extends to the early hours of the next day on Saturday and Sunday. 
+There is a strong arugment for varying taxi per mile rates by time of day, especially for weekends, to allow taxi drivers to be able to generate more revenue for servicing at late, often inconvenient hours, of the night.
+
+&nbsp;
+&nbsp;
+
+```{r, warning=FALSE, message=FALSE}
+
+divvy_by_duration <-
+divvy_trips %>%
+  group_by(day_of_week, time_of_day) %>%
+  summarize(duration = median(TRIP.DURATION)) 
+
+divvy_by_duration$day_of_week <- factor(divvy_by_duration$day_of_week, levels = c("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"))
+
+
+divvy_by_duration$time_of_day <- factor(divvy_by_duration$time_of_day, 
+                            levels = rev(c("0", "1","2", "3","4", "5","6", "7","8", "9","10", 
+                                           "11","12", "13","14", "15","16", 
+                                       "17","18", "19",
+                                       "20", "21","22", "23")))
+
+
+ggplot(data = divvy_by_duration, aes(x = day_of_week, y = time_of_day, fill = duration)) +
+geom_tile()+
+  scale_fill_gradient(low = "#bdd7e7", high = "#2171b5" ,
+                      name = "Median Trip\nDuration\n(In Seconds)", labels = comma) +
+  theme_bw() +
+  my_theme +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +  
+  theme(axis.title.x=element_blank(),
+        axis.title.y=element_blank(),
+        axis.ticks.y=element_blank(),
+        axis.ticks.x=element_blank(),
+        axis.text.y = element_text(vjust=-1.3),
+        axis.text.x = element_text(size = 15, face = "bold")) +
+  theme (legend.key = element_rect(fill = "black"),
+        legend.spacing.x = unit(0.2, 'cm'),
+        legend.text = element_text(family = "Courier", size = 8, face = "bold"),
+        legend.title = element_text(family = "Courier", size = 8, face = "bold"),
+        legend.background = element_rect(fill="white", size=1, linetype="solid",colour ="#969696")) +
+  scale_x_discrete (position = "top", expand = c(0,0)) +
+  scale_y_discrete(breaks = c(0,3,6,9,12,15,18,21),
+                   labels = c("Midnight","3 am","6 am","9 am", "Noon", "3 pm", "6 pm", "9 pm"))  +
+  labs (title ="Longest Divvy Trips Occur on Weekends.", 
+       subtitle = "Weekdays See Shorter Rides, Especially in Mornings & Evenings.",
+       x = "", 
+       y = "",
+       caption = "Chicago Divvy Data\n 2015-2017") 
+
+```
+
+Possibly due to increased tourist and visitor usage in Downtown/River area on weekends, the median trip duration is quite large compared to weekday median trip durations. Late night trips also seem to be of large durations, which may most likely be attributed to a very low number of riders in the first place, who may be interested in travelling for long durations at that time of day. Overall, this indicates that there are two distinct categories of users of divvy bikes: people who use divvy bikes to travel from/to work (or a bus/train stop) on weekdays, and people who use divvy bikes on weekends, probably for tourism.
+
+&nbsp;
+&nbsp;
+
+
+```{r, warning=FALSE, message=FALSE}
+
+divvy_by_gender <- divvy_trips %>%
+  filter(GENDER != '') %>%
+  group_by(hour_of_day = hour(date), GENDER) %>%
+  summarize(riders_by_hour = trunc(n() / (365*3)))
+
+
+ggplot(data = divvy_by_gender) +
+  geom_col(data = subset(divvy_by_gender, GENDER == "Male"), 
+           aes(x = hour_of_day, y = riders_by_hour, fill = GENDER), fill = divvy_male_color) +
+  geom_col(data = subset(divvy_by_gender, GENDER == "Female"), 
+           aes(x = hour_of_day, y = -riders_by_hour, fill = GENDER), fill = divvy_female_color) + 
+  scale_fill_brewer(palette = "Set1") + 
+  theme_bw() +
+  coord_flip() +
+  geom_hline(yintercept=0, colour="white", lwd=1) + my_theme + 
+  scale_y_continuous( labels = abs) +
+  annotate("label", x = 23.5, y = -140,
+           label = 'FEMALE RIDERS', color = divvy_female_color, fontface =2,  family="Courier") +
+  annotate("label", x = 23.50, y = 250, 
+           label = 'MALE RIDERS', color = divvy_male_color, fontface =2,  family="Courier") +
+  labs(title ="Highest Demand For Divvy During Peak Morning & Evening Hours", 
+     subtitle = "Significantly Fewer Female Riders, Especially At Night",
+     x = "", y = "Passengers Per Day",
+     caption = "Divvy Ridership Data\n 2015-2017") + 
+  scale_x_continuous(sec.axis = dup_axis(), breaks = c(0,6,12,17,22), 
+                     labels = c("Midnight", "6 am", "Noon", "5 pm", "10 pm" )) +
+  theme(axis.title.x = element_text(hjust = 0.2))
+
+#remove(divvy_by_gender)
+```
+
+Demand for divvy bikes peaks at morning and evening rush hours. There is a noticably higher usage of divvy bikes by men compared to women at all hours of the day. It's also interesting to note that there are almost no women riding bikes between 1 am and 4 am.
+
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+
+## ELASTICITY OF DEMAND 
+&nbsp;
+&nbsp;
+
+
+```{r, warning=FALSE, message=FALSE}
+# reference: https://ibecav.github.io/slopegraph/
+
+p <- public_transport %>%
+  group_by(year, month, trip_identity) %>%
+  summarise(riders = sum(rides)) %>%
+  filter (trip_identity == "bus") 
+
+green_palette <- c("#467563", "#78c679", "#78c679", "#238443","#467563", 
+                   "#c2e699", "#78c679", "#238443","#78c679", "#78c679", "#78c679", "#238443")
+
+warmer_months <- "#fd8d3c"
+cooler_months <- "#005a32"
+
+alternative <- c(cooler_months, cooler_months, warmer_months, warmer_months, 
+                 warmer_months, warmer_months, warmer_months, 
+                 warmer_months, warmer_months, warmer_months, cooler_months, cooler_months)
+
+ggplot(p, aes(x = year, y = riders, group = month)) +
+  scale_x_discrete(labels = c('Rides Taken on Snow Days \n in Winter',
+                              'Rides Taken on Non-Snow Days \n in Winter', "wow"))  +
+  geom_line(aes(color = month), alpha = 1, size = 1, linetype = 1) +
+  geom_point(aes(color = month, alpha = 1), size = 1.5) + 
+  scale_colour_manual(values=alternative) +
+  geom_label_repel(data = p %>% filter(year == "2015"),
+                  aes(label = paste0(month), color = month, family = "Courier", fontface = 2) , 
+                  hjust = "left", 
+                  fontface = 7, 
+                  size = 3, 
+                  nudge_x = -.45, 
+                  direction = "y") +
+  geom_label_repel(data = p %>% filter(year == "2017"),
+              aes(label = paste0(month), color = month, family = "Courier", fontface = 2) , 
+              hjust = "right", 
+              fontface = 7, 
+              size = 2.5, 
+              nudge_x = .4,
+              direction = "y") +
+  #scale_x_discrete(position = "bottom") +
+  theme_bw() +
+  theme(legend.position = "none") +
+  theme(panel.border     = element_blank()) +
+  #theme(axis.title.x     = element_blank()) +
+  theme(axis.text.y     = element_blank()) +
+  theme(axis.ticks   = element_blank()) +
+    my_theme +
+  labs( subtitle = "July Has Low Bus Usage Compared To Other Warm Months",
+    title = "Warm Months Experience More Bus Usage Than Cool Months",
+    caption = "CTA Transit Data\n 2015 - 2017",
+    x = "2015                         2016                          2017",
+    y = "Total Bus Riders") +
+  theme(plot.title = element_text(hjust = 0, size = 24, face = "bold"), 
+        plot.subtitle = element_text(hjust = 0, size = 20, face = "bold")) + 
+    scale_y_continuous(labels = scales::comma) 
+
+```
+
+The demand for buses has been falling between 2015 and 2017 as established earlier. However, further exploration reveals that this decline isn't driver by any particular set of months or seasonality, but by an overall decline across each month. Demand in July is dissimilar to other warmer months, potentially due to school closures in July which might dampen demand. December, which also experiences some school closure, is similarly behind other cooler months. 
+
+&nbsp;
+&nbsp;
+
 ```{r, warning=FALSE, message=FALSE}
 
 winter_dates <- 
@@ -372,449 +629,12 @@ ggplot(snow_comparison) +
   
 ```
 
-Comparing within cold days, it can be seen that consumers are indifferent between the presence & absence of snow. As such, snow doesn't necessarily present a physical barrier that would make people want to take fewer buses or trains (on average).
+Comparing within cold days, it can be seen that consumers are indifferent between the presence & absence of snow. As such, snow doesn't necessarily present a physical barrier that would make people want to take fewer buses or trains (on average), indicating a more resilient and inelastic demand for public transportation. 
 
-<br><br>
-
-```{r, warning=FALSE, message=FALSE}
-# reference: https://ibecav.github.io/slopegraph/
-
-p <- public_transport %>%
-  group_by(year, month, trip_identity) %>%
-  summarise(riders = sum(rides)) %>%
-  filter (trip_identity == "bus") 
-
-green_palette <- c("#467563", "#78c679", "#78c679", "#238443","#467563", 
-                   "#c2e699", "#78c679", "#238443","#78c679", "#78c679", "#78c679", "#238443")
-
-alternative <- c(train_color, divvy_color, taxi_color, winter_color, 
-                 "#525252", "#02818a", train_color, 
-                 divvy_color, taxi_color, winter_color, "#e31a1c", "#6a51a3")
-
-ggplot(p, aes(x = year, y = riders, group = month)) +
-  scale_x_discrete(labels = c('Rides Taken on Snow Days \n in Winter',
-                              'Rides Taken on Non-Snow Days \n in Winter', "wow"))  +
-  geom_line(aes(color = month), alpha = 1, size = 1, linetype = 1) +
-  geom_point(aes(color = month, alpha = 1), size = 1.5) + 
-  scale_colour_manual(values=green_palette) +
-  geom_label_repel(data = p %>% filter(year == "2015"),
-                  aes(label = paste0(month), color = month, family = "Courier", fontface = 2) , 
-                  hjust = "left", 
-                  fontface = 7, 
-                  size = 3, 
-                  nudge_x = -.45, 
-                  direction = "y") +
-  geom_label_repel(data = p %>% filter(year == "2017"),
-              aes(label = paste0(month), color = month, family = "Courier", fontface = 2) , 
-              hjust = "right", 
-              fontface = 7, 
-              size = 2.5, 
-              nudge_x = .4,
-              direction = "y") +
-  #scale_x_discrete(position = "bottom") +
-  theme_bw() +
-  theme(legend.position = "none") +
-  theme(panel.border     = element_blank()) +
-  #theme(axis.title.x     = element_blank()) +
-  theme(axis.text.y     = element_blank()) +
-  theme(axis.ticks   = element_blank()) +
-    my_theme +
-  labs( title = "Overall Bus Usage Has Declined Between 2015 and 2017",
-    subtitle = "Summer Months still experience more bus usage than in Winter",
-    caption = "CTA Transit Data\n 2015 - 2017",
-    x = "2015                     2016                      2017",
-    y = "Total Bus Riders") +
-  theme(plot.title = element_text(hjust = 0.58, size = 12, face = "bold"), 
-        plot.subtitle = element_text(hjust = 0.515, size = 10, face = "bold")) + 
-    scale_y_continuous(labels = scales::comma) 
-
-```
-
-The demand for buses has been falling between 2015 and 2017 as established earlier. However, further exploration reveals that this decline isn't driver by any particular set of months or seasonality, but by an overall decline across each month. 
-
-<br><br>
+&nbsp;
+&nbsp;
 
 ```{r, warning=FALSE, message=FALSE}
-
-divvy_by_gender <- divvy_trips %>%
-  filter(GENDER != '') %>%
-  group_by(hour_of_day = hour(date), GENDER) %>%
-  summarize(riders_by_hour = trunc(n() / (365*3)))
-
-
-ggplot(data = divvy_by_gender) +
-  geom_col(data = subset(divvy_by_gender, GENDER == "Male"), 
-           aes(x = hour_of_day, y = riders_by_hour, fill = GENDER), fill = divvy_male_color) +
-  geom_col(data = subset(divvy_by_gender, GENDER == "Female"), 
-           aes(x = hour_of_day, y = -riders_by_hour, fill = GENDER), fill = divvy_female_color) + 
-  scale_fill_brewer(palette = "Set1") + 
-  theme_bw() +
-  coord_flip() +
-  geom_hline(yintercept=0, colour="white", lwd=1) + my_theme + 
-  scale_y_continuous( labels = abs) +
-  annotate("label", x = 23.5, y = -140,
-           label = 'FEMALE RIDERS', color = divvy_female_color, fontface =2,  family="Courier") +
-  annotate("label", x = 23.50, y = 250, 
-           label = 'MALE RIDERS', color = divvy_male_color, fontface =2,  family="Courier") +
-  labs(title ="Highest Demand For Divvy Bikes During Peak Morning & Evening Hours", 
-     subtitle = "Significantly Fewer Female Riders, Especially At Night",
-     x = "", y = "Passengers Per Day",
-     caption = "Divvy Ridership Data\n 2015-2017") + 
-  scale_x_continuous(sec.axis = dup_axis(), breaks = c(0,6,12,17,22), 
-                     labels = c("Midnight", "6 am", "Noon", "5 pm", "10 pm" )) +
-  theme(axis.title.x = element_text(hjust = 0.2))
-
-#remove(divvy_by_gender)
-```
-
-Demand for divvy bikes peaks at morning and evening rush hours. There is a noticably higher usage of divvy bikes by men compared to women at all hours of the day. It's also interesting to note that there are almost no women riding bikes between 1 am and 4 am.
-
-
-<br><br>
-
-```{r, warning=FALSE, message=FALSE}
-
-divvy_by_duration <-
-divvy_trips %>%
-  group_by(day_of_week, time_of_day) %>%
-  summarize(duration = median(TRIP.DURATION)) 
-
-divvy_by_duration$day_of_week <- factor(divvy_by_duration$day_of_week, levels = c("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"))
-
-
-divvy_by_duration$time_of_day <- factor(divvy_by_duration$time_of_day, 
-                            levels = rev(c("0", "1","2", "3","4", "5","6", "7","8", "9","10", 
-                                           "11","12", "13","14", "15","16", 
-                                       "17","18", "19",
-                                       "20", "21","22", "23")))
-
-
-ggplot(data = divvy_by_duration, aes(x = day_of_week, y = time_of_day, fill = duration)) +
-geom_tile()+
-  scale_fill_gradient(low = "#bdd7e7", high = "#2171b5" ,
-                      name = "Median Trip\nDuration\n(In Seconds)", labels = comma) +
-  theme_bw() +
-  my_theme +
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +  
-  theme(axis.title.x=element_blank(),
-        axis.title.y=element_blank(),
-        axis.ticks.y=element_blank(),
-        axis.ticks.x=element_blank(),
-        axis.text.y = element_text(vjust=-1.3),
-        axis.text.x = element_text(size = 8, face = "bold")) +
-  theme (legend.key = element_rect(fill = "black"),
-        legend.spacing.x = unit(0.2, 'cm'),
-        legend.text = element_text(family = "Courier", size = 8, face = "bold"),
-        legend.title = element_text(family = "Courier", size = 8, face = "bold"),
-        legend.background = element_rect(fill="white", size=1, linetype="solid",colour ="#969696")) +
-  scale_x_discrete (position = "top", expand = c(0,0)) +
-  scale_y_discrete(breaks = c(0,3,6,9,12,15,18,21),
-                   labels = c("Midnight","3 am","6 am","9 am", "Noon", "3 pm", "6 pm", "9 pm"))  +
-  labs (title ="Longest Divvy Trips Occur on Weekends.", 
-       subtitle = "Weekdays See Shorter Rides, Especially in Mornings & Evenings.",
-       x = "", 
-       y = "",
-       caption = "Chicago Divvy Data\n 2015-2017") 
-
-```
-
-Possibly due to increased tourist and visitor usage in Downtown/River area on weekends, the median trip duration is quite large compared to weekday median trip durations. Late night trips also seem to be of large durations, which may most likely be attributed to a very low number of riders in the first place, who may be interested in travelling for long durations at that time of day.
-
-
-<br><br>
-```{r, warning=FALSE, message=FALSE}
-
-taxi_start_times_solo <- as.data.frame(taxi_start_times)
-
-taxi_light <- "#ffffb2"
-taxi_dark <- "#cc4c02"
-
-taxi_start_times_solo$hour <- hour(taxi_start_times_solo$taxi_start_times)
-taxi_start_times_solo$weekday <- lubridate::wday(taxi_start_times_solo$taxi_start_times, label = TRUE)
-
-taxi_by_hour <-
-  taxi_start_times_solo %>%
-  group_by(weekday, hour) %>%
-  summarize(count = n())
-
-taxi_by_hour$weekday <- factor(taxi_by_hour$weekday, levels = c("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"))
-taxi_by_hour$hour <- as.factor (taxi_by_hour$hour)
-taxi_by_hour$hour <- factor(taxi_by_hour$hour, 
-                            levels = rev(c("0", "1","2", "3","4", "5","6", "7","8", "9","10", 
-                                           "11","12", "13","14", "15","16", 
-                                       "17","18", "19",
-                                       "20", "21","22", "23")))
-
-
-ggplot(data = taxi_by_hour, aes(x = weekday, y = hour,  fill = count/taxi_num_days)) +
-  geom_tile() +
-  scale_fill_gradient(low = taxi_light, high = taxi_dark,name = "Taxi Trips", labels = comma) +
-  theme_bw() +
-  my_theme + 
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +  
-  theme(axis.title.x=element_blank(),
-        axis.title.y=element_blank(),
-        axis.ticks.y=element_blank(),
-        axis.ticks.x=element_blank(),
-        axis.text.y = element_text(vjust=-1.3),
-        axis.text.x = element_text(size = 8, face = "bold")) +
-  theme (legend.key = element_rect(fill = "black"),
-        legend.spacing.x = unit(0.2, 'cm'),
-        legend.text = element_text(family = "Courier", size = 8, face = "bold"),
-        legend.title = element_text(family = "Courier", size = 8, face = "bold"),
-        legend.background = element_rect(fill="white", size=1, linetype="solid",colour ="#969696")) +
-  scale_x_discrete (position = "top", expand = c(0,0)) +
-  scale_y_discrete(breaks = c(0,3,6,9,12,15,18,21),
-                   labels = c("Midnight","3 am","6 am","9 am", "Noon", "3 pm", "6 pm", "9 pm"))  +
-  labs (title ="Highest Weekday Taxi Traffic Between 6-8 pm, Much Later on Weekends", 
-       subtitle = "Weekend Rush Drives Taxis Late Into The Night",
-       x = "", 
-       y = "",
-       caption = "Chicago Taxi Trips Data\n 2015-2017") 
-```
-
-During weekdays, high demand is during the day, peaking during evening rush hour, with Friday evening rush hour being the busiest. However, unlike on weekdays, on weekdays, demand stays high at night, and extends to the early hours of the next day on Saturday and Sunday. 
-<br><br>
-
-#### NEXT STEPS:
-Next steps involve creating maps & vizualizations that highlight flow of traffic & changes in demand patterns & routes.
-
-
-
-```{r}
-
-taxi_2015 <- read.csv (here::here("data", "2015_Taxi_Trips1.csv"))
-taxi_2015 <-
-  taxi_2015 %>%
-  drop_na(Pickup.Centroid.Latitude, Pickup.Centroid.Longitude, Pickup.Centroid.Location,
-          Dropoff.Centroid.Latitude, Dropoff.Centroid.Longitude, Dropoff.Centroid..Location,
-          Trip.Total)
-
-
-taxi_2015$Pickup.Centroid.Latitude = as.numeric(as.character(taxi_2015$Pickup.Centroid.Latitude))
-taxi_2015$Dropoff.Centroid.Latitude = as.numeric(as.character(taxi_2015$Dropoff.Centroid.Latitude))
-taxi_2015$Dropoff.Centroid.Longitude = as.numeric(taxi_2015$Dropoff.Centroid.Longitude)
-
-
-taxi_2015 <- 
-  taxi_2015 %>%
-  drop_na(Pickup.Centroid.Latitude) %>%
-  mutate_if(is.numeric, round, digits=4)
-
-
-taxi_2015_grouped <-
-  taxi_2015 %>%
-    group_by(Pickup.Centroid.Longitude, Pickup.Centroid.Latitude) %>%
-    summarize(median_cost = median(Trip.Total), num_trips = n()) %>%
-    filter (median_cost < 100, num_trips > 10)
-
-```
-
-
-
-```{r}
-my_theme_maps <- 
-  theme(
-    axis.text = element_text(size = 7, face = "bold", family="Courier"),
-    axis.title =  element_text(size = 10, face = "bold", family="Courier"),
-    plot.title = element_text(hjust = 0, size = 14, face = "bold", family="Courier"), 
-    plot.subtitle = element_text(size = 12, face = "bold", family="Courier"),
-    plot.caption = element_text(size = 8, face = "bold", family="Courier"),
-    legend.spacing.x = unit(0.2, 'cm'),
-    panel.border = element_rect(colour = "#969696", fill=NA, size=2),
-    panel.grid.major = element_blank(), 
-    panel.grid.minor = element_blank(),
-    axis.title.x=element_blank(),
-    axis.text.x=element_blank(),
-    axis.ticks.x=element_blank(),
-    axis.title.y=element_blank(),
-    axis.text.y=element_blank(),
-    axis.ticks.y=element_blank(),
-    legend.text = element_text(family = "Courier", size = 8, face = "bold"),
-    legend.title = element_text(family = "Courier", size = 8, face = "bold"),
-    legend.background = element_rect(fill="white", size=1, linetype="solid",colour ="#969696"))
-
-```
-
-
-
-
-```{r}
-
-
-taxi_starts <- st_as_sf(taxi_2015_grouped, coords=c("Pickup.Centroid.Longitude","Pickup.Centroid.Latitude"),
-                        agr="constant", crs=4326)
-
-areas <- st_read ("https://data.cityofchicago.org/resource/igwz-8jzy.geojson")
-areas <- st_transform (areas, 32616)
-
-
-ggplot(data = taxi_starts) +
-  geom_sf(data = areas, colour = "white", fill = "black") +
-  geom_sf(aes(size = num_trips, colour = median_cost),  show.legend = 'point') +
-  theme_bw() +
-  my_theme_maps +
-  theme(panel.grid.major=element_line(colour="transparent")) +
-  scale_colour_gradient(low = "#E8E013", high = "#FF1570",
-                        name = "Median Trip Cost\n(In USD)", labels = comma) +
-  annotate("segment", x = -87.91, xend = -87.92, y = 41.97, yend = 41.93, 
-           color="orange", linetype="twodash") +
-  annotate("text", x = -87.91, y = 41.92, label = "O'Hare \nAirport", 
-         colour = "orange", face = "bold", size = 3, face = "bold", family="Courier" ) +
-  annotate("segment", x = -87.765, xend = -87.83, y = 41.785, yend = 41.82, 
-           color="orange", linetype="twodash") +
-  annotate("text", x = -87.83, y = 41.83, label = "Midway \nAirport", 
-         colour = "orange", face = "bold", size = 3, face = "bold", family="Courier" ) +
-  annotate("segment", x = -87.615, xend = -87.58, y = 41.895, yend = 41.93, 
-         color="orange", linetype="twodash") +
-  annotate("text", x = -87.57, y = 41.94, label = "Downtown \nChicago", 
-         colour = "orange", face = "bold", size = 3, face = "bold", family="Courier" ) +
-  #theme(legend.position = c(0.13,0.24))  +
-  scale_size_continuous(name = 'Number of Rides \n(From Location)', labels = comma) +
-  labs (title ="Airports & South Side Pickups Generate Highest Median Revenue for Taxi Drivers", 
-       subtitle = "But Most Taxi Traffic Is Concentrated in Downtown & North Side",
-       x = "", 
-       y = "",
-       caption = "Chicago Taxi Trips\n2015 Data") 
-
-
-
-```
-
-
-
-
-
-```{r}
-
-taxi_2015_grouped_distance <-
-  taxi_2015 %>%
-    group_by(Pickup.Centroid.Longitude, Pickup.Centroid.Latitude) %>%
-    summarize(median_trip_distance = median(Trip.Miles), num_trips = n()) %>%
-    filter (median_trip_distance > 0.06, num_trips > 10)
-
-taxi_starts_distance <- st_as_sf(taxi_2015_grouped_distance,
-                                 coords=c("Pickup.Centroid.Longitude","Pickup.Centroid.Latitude"),
-                                 agr="constant", crs=4326)
-
-
-ggplot(data = taxi_starts_distance) +
-  geom_sf(data = areas, colour = "white", fill = "black") +
-  geom_sf(aes(size = num_trips, colour = median_trip_distance),  show.legend = 'point') +
-  theme_bw() +
-  my_theme_maps +
-  theme(panel.grid.major=element_line(colour="transparent")) +
-  scale_colour_gradient(low = "#E8E013", high = "#FF1570",
-                        name = "Median Trip \nDistance\n(In Miles)", labels = comma) +
-  annotate("segment", x = -87.91, xend = -87.92, y = 41.97, yend = 41.93, 
-           color="orange", linetype="twodash") +
-  annotate("text", x = -87.91, y = 41.92, label = "O'Hare \nAirport", 
-         colour = "orange", face = "bold", size = 3, face = "bold", family="Courier" ) +
-  annotate("segment", x = -87.765, xend = -87.83, y = 41.785, yend = 41.82, 
-           color="orange", linetype="twodash") +
-  annotate("text", x = -87.83, y = 41.83, label = "Midway \nAirport", 
-         colour = "orange", face = "bold", size = 3, face = "bold", family="Courier" ) +
-  annotate("segment", x = -87.615, xend = -87.58, y = 41.895, yend = 41.93, 
-         color="orange", linetype="twodash") +
-  annotate("text", x = -87.57, y = 41.94, label = "Downtown \nChicago", 
-         colour = "orange", face = "bold", size = 3, face = "bold", family="Courier" ) +
-  #theme(legend.position = c(0.13,0.24))  +
-  scale_size_continuous(name = 'Number of Rides \n(From Location)', labels = comma) +
-  labs (subtitle ="Downtown has Shortest Rides", 
-       title = "Excluding Airports, Highest Number of Long Distance Taxi Rides Are From Hyde Park. ",
-       x = "", 
-       y = "",
-       caption = "Chicago Taxi Trips\n2015 Data") 
-
-```
-
-#### OKAY NEXT
-
-
-
-```{r}
-
-areas <- st_read ("https://data.cityofchicago.org/resource/igwz-8jzy.geojson")
-areas <- st_transform (areas, 32616)
-
-
-trains <- st_read ("/Users/kazi/Desktop/transportation-demand-chicago/data/CTA_RailLines/CTA_RailLines.shp ")
-trains <- st_read(here::here("data/CTA_RailLines/", "CTA_RailLines.shp"))
-trains <- st_transform (trains, 32616)
-
-
-
-
-ggplot() +
-  geom_sf(data = areas, colour = "white", fill = "white") +
-  geom_sf(data = trains, colour = "red")
-```
-
-
-
-```{r}
-
-divvy_trips <-
-  divvy_trips %>%
-  drop_na(FROM.LONGITUDE,FROM.LATITUDE)
-
-divvy_from_sf <- st_as_sf(divvy_trips, 
-                          coords=c("FROM.LONGITUDE","FROM.LATITUDE"), 
-                          crs=4326, 
-                          agr="constant")
-
-
-
-ggplot() +
-  geom_sf(data = areas) +
-  geom_sf (data = water_wards, aes(fill = ))
-
-intersects <- st_intersects(areas, mini_divvy)
-water_wards <- st_join(mini_divvy, areas)
-
-table(intersects$id_polygons)
-
-areas <- st_read ("https://data.cityofchicago.org/resource/igwz-8jzy.geojson")
-areas <- st_transform (areas, 32616)
-
-
-mini_divvy <- st_transform (mini_divvy, 32616)
-
-st_crs(mini_divvy)
-
-x<- water_wards %>%
-  group_by(community) %>%
-  summarize (bike_starts = n()) 
-
-  ggplot() +    
-  geom_sf(data = areas) +
-  geom_sf(data = x, aes(fill = bike_starts))
-
-plot(areas)
-
-```
-
-
-
-
-
-
-```{r}
-
-divvy_trips <-
-  divvy_trips %>%
-  drop_na(FROM.LONGITUDE,FROM.LATITUDE)
-
-divvy_small <- st_as_sf(divvy_trips, coords=c("FROM.LONGITUDE","FROM.LATITUDE"),
-                        agr="constant", crs=4326)
-
-divvy_small <- st_transform (divvy_small, 32616)
-st_contains(divvy_small, areas)
-```
-
-
-
-```{r}
 
 #1 week before week of lol
 #2 week == effect of week of lol
@@ -902,19 +722,209 @@ ggplot() +
            label = 'Route-Affected Buses', color = bus_downtown, 
            fontface =2,  family="Courier")   + 
   annotate("text", x = 1, y = 320, label = "Higher Trough\nThan Usual", 
-         colour = lolla_color, face = "bold", size = 2.5, face = "bold", family="Courier" ) +
+         colour = lolla_color, face = "bold", size = 5, face = "bold", family="Courier" ) +
   annotate("segment", xend = 2, x = 1, yend = 400, y = 350, 
          color=lolla_color,
          arrow = arrow(length = unit(0.35, "cm")))  +
-  labs(title ="Regular Users Switch to Route-Unaffected Buses During Lollapalooza.", 
-       subtitle = "Users Revert to Regular Demand Patterns After Road Closures Removed.",
+  labs(title ="Regular Users Switch to Route-Unaffected Buses During Lollapalooza", 
+       subtitle = "Users Revert to Regular Demand Patterns After Road Closures Removed",
        x = "", y = "Bus Users (Thousands)",
        caption = "CTA Bus Data\n 2015-2017") 
   
 ```
 
+We also see how inelastic this change in demand for public transportation is for events such as Lollapalooza. While there is some marginal shift from buses (potentially to trains - to avoid road traffic), for the most part, the buses with changed routes see little change in demand during the road-blockage period. Some increase in demand on non-effected buses indicates there is some shift, but it reverts to original patterns as soon as road blocks are removed. 
+
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+
+## GEOGRAPHIC DISTRIBUTION
+&nbsp;
+&nbsp;
+
+```{r, warning=FALSE, message=FALSE, include = FALSE    }
+areas <- st_read ("https://data.cityofchicago.org/resource/igwz-8jzy.geojson")
+areas <- st_transform (areas, 32616)
+trains <- st_read(here::here("data/CTA_RailLines/", "CTA_RailLines.shp"))
+trains <- st_transform (trains, 32616)
+```
 
 
 
 
+```{r, warning=FALSE, message=FALSE}
 
+divvy_trips$year <- year(divvy_trips$date)
+divvy_trips$month <- month(divvy_trips$date)
+
+divvy_trips <-
+  divvy_trips %>%
+  filter (year == 2017, month == 7) %>%
+  drop_na(FROM.LONGITUDE,FROM.LATITUDE) 
+
+
+divvy_from_sf <- st_as_sf(divvy_trips, 
+                          coords=c("FROM.LONGITUDE","FROM.LATITUDE"), 
+                          crs=4326, 
+                          agr="constant")
+
+
+divvy_from_sf <- st_transform (divvy_from_sf, 32616)
+
+joined_data <- st_join(divvy_from_sf, areas)
+
+grouped_by_community <- 
+  joined_data %>%
+  group_by(community) %>%
+  summarize (bike_starts = n()) 
+
+area_groups <- st_join(areas, grouped_by_community)
+
+ggplot() +
+  geom_sf(data = area_groups, aes(fill = bike_starts), colour = "black", show.legend = "line") +
+  #geom_sf_text(data = area_groups, aes(label = community.x), 
+  #             size = 0.65, colour = "white", family="Courier", check_overlap = TRUE) +
+  geom_sf(data = trains, colour = "red")  +
+  theme_bw() +
+  my_theme_maps +
+  theme(panel.grid.major=element_line(colour="transparent"))  +
+  labs (subtitle ="Highest Divvy Usage In Downtown & North Chicago", 
+       title = "South-West Areas With No Trains Also Have No Divvys",
+       x = "", 
+       y = "",
+       caption = "Chicago Divvy Trips July 2017\n*Red Lines Indicate Train Routes",
+       fill='Divvy Rides') 
+
+```
+
+There is a clear case of the 'rich getting richer' when it comes to transportation access in Chicago. Areas with ample supply of train lines also have a large amount of divvy bikes, whereas areas, especially on the South/South-West side, albeit with lower population, have very little access to train routes, and no divvy bikes either. Areas in downtown have large divvy usage, and further exploration can be done to assess demand in that area by day of week to glean tourist traffic.
+
+&nbsp;
+&nbsp;
+
+```{r, warning=FALSE, message=FALSE, include=FALSE}
+# cleaning memory
+
+remove (area_groups, bus_point, bus_trips, train_trips,divvy_by_duration, divvy_by_gender, divvy_by_weekday)
+remove (divvy_from_sf, divvy_trips, joined_data, lol_total, public_transport)
+remove (taxi_start_times_date, taxi_start_times_solo)
+remove (taxi_start_times)
+```
+
+
+```{r, warning=FALSE, message=FALSE}
+
+taxi_2015 <- read.csv (here::here("data", "2015_Taxi_Trips1.csv"))
+taxi_2015 <-
+  taxi_2015 %>%
+  drop_na(Pickup.Centroid.Latitude, Pickup.Centroid.Longitude, Pickup.Centroid.Location,
+          Dropoff.Centroid.Latitude, Dropoff.Centroid.Longitude, Dropoff.Centroid..Location,
+          Trip.Total)
+
+
+taxi_2015$Pickup.Centroid.Latitude = as.numeric(as.character(taxi_2015$Pickup.Centroid.Latitude))
+taxi_2015$Dropoff.Centroid.Latitude = as.numeric(as.character(taxi_2015$Dropoff.Centroid.Latitude))
+taxi_2015$Dropoff.Centroid.Longitude = as.numeric(taxi_2015$Dropoff.Centroid.Longitude)
+
+
+taxi_2015 <- 
+  taxi_2015 %>%
+  drop_na(Pickup.Centroid.Latitude) %>%
+  mutate_if(is.numeric, round, digits=4)
+
+
+taxi_2015_grouped <-
+  taxi_2015 %>%
+    group_by(Pickup.Centroid.Longitude, Pickup.Centroid.Latitude) %>%
+    summarize(median_cost = median(Trip.Total), num_trips = n()) %>%
+    filter (median_cost < 100, num_trips > 10)
+
+
+taxi_starts <- st_as_sf(taxi_2015_grouped, coords=c("Pickup.Centroid.Longitude","Pickup.Centroid.Latitude"),
+                        agr="constant", crs=4326)
+
+
+ggplot(data = taxi_starts) +
+  geom_sf(data = areas, colour = "white", fill = "black") +
+  geom_sf(aes(size = num_trips, colour = median_cost),  show.legend = 'point') +
+  theme_bw() +
+  my_theme_maps +
+  theme(panel.grid.major=element_line(colour="transparent")) +
+  scale_colour_gradient(low = "#E8E013", high = "#FF1570",
+                        name = "Median Trip Cost\n(In USD)", labels = comma) +
+  annotate("segment", x = -87.91, xend = -87.92, y = 41.97, yend = 41.93, 
+           color="orange", linetype="twodash") +
+  annotate("text", x = -87.91, y = 41.92, label = "O'Hare \nAirport", 
+         colour = "orange", face = "bold", size = 3, face = "bold", family="Courier" ) +
+  annotate("segment", x = -87.765, xend = -87.83, y = 41.785, yend = 41.82, 
+           color="orange", linetype="twodash") +
+  annotate("text", x = -87.83, y = 41.83, label = "Midway \nAirport", 
+         colour = "orange", face = "bold", size = 3, face = "bold", family="Courier" ) +
+  annotate("segment", x = -87.615, xend = -87.58, y = 41.895, yend = 41.93, 
+         color="orange", linetype="twodash") +
+  annotate("text", x = -87.57, y = 41.94, label = "Downtown \nChicago", 
+         colour = "orange", face = "bold", size = 3, face = "bold", family="Courier" ) +
+  #theme(legend.position = c(0.13,0.24))  +
+  scale_size_continuous(name = 'Number of Rides \n(From Location)', labels = comma) +
+  labs (title ="Airports & South Side Generate Highest Median Revenue", 
+       subtitle = "But Most Taxi Traffic Is Concentrated in Downtown & North Side",
+       x = "", 
+       y = "",
+       caption = "Chicago Taxi Trips\n2015 Data")  
+
+
+
+```
+
+Naturally, trips from the airports (Midway & O'Hare) generate the highest median trip cost due to their large distances, and airport fee related costs. However, it is also interesting to see that a large number of other high cost trips happen in areas not serviced by train routes, such as in the far South/South-West sides of Chicago. Downtown, apart from having large Divvy & Bus/Train stops, also has high taxi traffic.
+
+&nbsp;
+&nbsp;
+
+```{r, warning=FALSE, message=FALSE}
+
+taxi_2015_grouped_distance <-
+  taxi_2015 %>%
+    group_by(Pickup.Centroid.Longitude, Pickup.Centroid.Latitude) %>%
+    summarize(median_trip_distance = median(Trip.Miles), num_trips = n()) %>%
+    filter (median_trip_distance > 0.06, num_trips > 10)
+
+taxi_starts_distance <- st_as_sf(taxi_2015_grouped_distance,
+                                 coords=c("Pickup.Centroid.Longitude","Pickup.Centroid.Latitude"),
+                                 agr="constant", crs=4326)
+
+
+ggplot(data = taxi_starts_distance) +
+  geom_sf(data = areas, colour = "white", fill = "black") +
+  geom_sf(aes(size = num_trips, colour = median_trip_distance),  show.legend = 'point') +
+  theme_bw() +
+  my_theme_maps +
+  theme(panel.grid.major=element_line(colour="transparent")) +
+  scale_colour_gradient(low = "#E8E013", high = "#FF1570",
+                        name = "Median Trip \nDistance\n(In Miles)", labels = comma) +
+  annotate("segment", x = -87.91, xend = -87.92, y = 41.97, yend = 41.93, 
+           color="orange", linetype="twodash") +
+  annotate("text", x = -87.91, y = 41.92, label = "O'Hare \nAirport", 
+         colour = "orange", face = "bold", size = 3, face = "bold", family="Courier" ) +
+  annotate("segment", x = -87.765, xend = -87.83, y = 41.785, yend = 41.82, 
+           color="orange", linetype="twodash") +
+  annotate("text", x = -87.83, y = 41.83, label = "Midway \nAirport", 
+         colour = "orange", face = "bold", size = 3, face = "bold", family="Courier" ) +
+  annotate("segment", x = -87.615, xend = -87.58, y = 41.895, yend = 41.93, 
+         color="orange", linetype="twodash") +
+  annotate("text", x = -87.57, y = 41.94, label = "Downtown \nChicago", 
+         colour = "orange", face = "bold", size = 3, face = "bold", family="Courier" ) +
+  #theme(legend.position = c(0.13,0.24))  +
+  scale_size_continuous(name = 'Number of Rides \n(From Location)', labels = comma) +
+  labs (subtitle ="Downtown has Shortest Rides", 
+       title = "Excluding Airports, Highest Number of Long Distance Taxi Rides Are From Hyde Park. ",
+       x = "", 
+       y = "",
+       caption = "Chicago Taxi Trips\n2015 Data") 
+
+```
+
+
+Following from the above map, we see a similar trend with trip distance. An interesting point to note is that people in areas far off from downtown have longer trip distances, indicating they are travelling farther away, whereas trips in Downtown/North-Side are generally shorter, indicating movement near to downtown. This could potentially serve as an indicator of concentration of employment & other resources within a narrow geographical area.
